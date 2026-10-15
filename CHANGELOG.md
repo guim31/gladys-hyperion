@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-15
+
 ### Added
 
 - Hyperion.ng servers found automatically (SSDP and mDNS through Gladys) or by
@@ -28,4 +30,5 @@ the notes of the version's GitHub Release.
   for a token.
 - Texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-hyperion/commits/main
+[Unreleased]: https://github.com/guim31/gladys-hyperion/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-hyperion/releases/tag/v1.0.1
