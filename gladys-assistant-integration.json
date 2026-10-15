@@ -1,147 +1,223 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Hyperion",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Hyperion.ng ambient TV lighting: on/off, color, effects, Ambilight capture and components.",
+    "fr": "Éclairage d'ambiance TV Hyperion.ng : marche, couleur, effets, capture Ambilight, composants.",
+    "de": "Hyperion.ng-TV-Ambientebeleuchtung: an/aus, Farbe, Effekte, Ambilight-Aufnahme, Komponenten.",
+    "es": "Iluminación ambiental de TV Hyperion.ng: encendido, color, efectos, captura Ambilight."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-hyperion:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-hyperion/main/cover.png",
+  "categories": ["lighting"],
+  "transports": ["local"],
+  "network_discovery": [
+    {
+      "type": "ssdp",
+      "st": "urn:hyperion-project.org:device:basic:1"
+    },
+    {
+      "type": "mdns",
+      "service": "_hyperiond-json._tcp"
+    }
+  ],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Finding your Hyperion",
+        "fr": "Trouver votre Hyperion",
+        "de": "Dein Hyperion finden",
+        "es": "Encontrar su Hyperion"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Hyperion.ng servers on the same network as Gladys are found automatically: open the Discovery tab. If yours is missing, enter its IP address below. If Hyperion asks for a token (Local API Authentication), use the \"Request a token\" button below, then accept the request in the Hyperion web interface.",
+        "fr": "Les serveurs Hyperion.ng du même réseau que Gladys sont trouvés automatiquement : ouvrez l'onglet Découverte. S'il manque le vôtre, saisissez son adresse IP ci-dessous. Si Hyperion demande un jeton (authentification de l'API locale), utilisez le bouton « Demander un jeton » ci-dessous, puis acceptez la demande dans l'interface web d'Hyperion.",
+        "de": "Hyperion.ng-Server im selben Netzwerk wie Gladys werden automatisch gefunden: Öffne den Tab „Entdecken“. Fehlt deiner, gib unten seine IP-Adresse ein. Verlangt Hyperion ein Token (Authentifizierung der lokalen API), nutze unten die Schaltfläche „Token anfordern“ und nimm die Anfrage dann in der Weboberfläche von Hyperion an.",
+        "es": "Los servidores Hyperion.ng de la misma red que Gladys se encuentran automáticamente: abra la pestaña Descubrir. Si falta el suyo, introduzca su dirección IP a continuación. Si Hyperion pide un token (autenticación de la API local), use el botón «Solicitar un token» de abajo y acepte la solicitud en la interfaz web de Hyperion."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-hyperion/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "hosts",
+      "type": "string",
+      "label": {
+        "en": "Server IP addresses",
+        "fr": "Adresses IP des serveurs",
+        "de": "IP-Adressen der Server",
+        "es": "Direcciones IP de los servidores"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "Optional, separated by commas, with the JSON API port when it is not 19444 (192.168.1.20:19444). Only for the servers automatic discovery does not find.",
+        "fr": "Facultatif, séparées par des virgules, avec le port de l'API JSON s'il n'est pas 19444 (192.168.1.20:19444). Seulement pour les serveurs que la découverte automatique ne trouve pas.",
+        "de": "Optional, durch Kommas getrennt, mit dem Port der JSON-API, wenn er nicht 19444 ist (192.168.1.20:19444). Nur für Server, die die automatische Erkennung nicht findet.",
+        "es": "Opcional, separadas por comas, con el puerto de la API JSON si no es 19444 (192.168.1.20:19444). Solo para los servidores que el descubrimiento automático no encuentra."
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.20",
+        "fr": "ex. 192.168.1.20",
+        "de": "z. B. 192.168.1.20",
+        "es": "p. ej. 192.168.1.20"
+      },
+      "required": false,
+      "default": ""
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "token",
+      "type": "secret",
+      "label": {
+        "en": "API token (optional)",
+        "fr": "Jeton d'API (facultatif)",
+        "de": "API-Token (optional)",
+        "es": "Token de API (opcional)"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "Only if Hyperion asks for one and you created it yourself (Network services, Token management). The \"Request a token\" button does it for you.",
+        "fr": "Seulement si Hyperion en demande un et que vous l'avez créé vous-même (Services réseau, Gestion des jetons). Le bouton « Demander un jeton » le fait pour vous.",
+        "de": "Nur wenn Hyperion eines verlangt und du es selbst erstellt hast (Netzwerkdienste, Token-Verwaltung). Die Schaltfläche „Token anfordern“ erledigt das für dich.",
+        "es": "Solo si Hyperion pide uno y usted mismo lo ha creado (Servicios de red, Gestión de tokens). El botón «Solicitar un token» lo hace por usted."
+      },
+      "required": false
     },
     {
-      "key": "unit",
+      "key": "priority",
+      "type": "number",
+      "label": {
+        "en": "Priority of Gladys",
+        "fr": "Priorité de Gladys",
+        "de": "Priorität von Gladys",
+        "es": "Prioridad de Gladys"
+      },
+      "description": {
+        "en": "Hyperion shows the source with the lowest number. 128 covers the captures (240 and 250 by default) and stays under the Hyperion web interface.",
+        "fr": "Hyperion affiche la source au plus petit numéro. 128 passe devant les captures (240 et 250 par défaut) et reste sous l'interface web d'Hyperion.",
+        "de": "Hyperion zeigt die Quelle mit der kleinsten Nummer. 128 liegt vor den Aufnahmen (standardmäßig 240 und 250) und hinter der Weboberfläche von Hyperion.",
+        "es": "Hyperion muestra la fuente con el número más bajo. 128 pasa por delante de las capturas (240 y 250 por defecto) y queda por detrás de la interfaz web de Hyperion."
+      },
+      "required": false,
+      "default": 128,
+      "min": 1,
+      "max": 253
+    },
+    {
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de las funciones"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Names given to the features of new devices (Light, Brightness, Effect...), and language of the \"Showing now\" text.",
+        "fr": "Noms donnés aux fonctionnalités des nouveaux appareils (Éclairage, Luminosité, Effet…), et langue du texte « Affichage en cours ».",
+        "de": "Namen, die den Funktionen neuer Geräte gegeben werden (Licht, Helligkeit, Effekt…), und Sprache des Texts „Aktuelle Anzeige“.",
+        "es": "Nombres dados a las funciones de los nuevos dispositivos (Luz, Brillo, Efecto…) e idioma del texto «Mostrando ahora»."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "search",
+      "label": {
+        "en": "Search for servers",
+        "fr": "Rechercher les serveurs",
+        "de": "Server suchen",
+        "es": "Buscar servidores"
+      },
+      "description": {
+        "en": "Looks for Hyperion servers again and reports the ones found.",
+        "fr": "Recherche à nouveau les serveurs Hyperion et liste ceux trouvés.",
+        "de": "Sucht erneut nach Hyperion-Servern und listet die gefundenen auf.",
+        "es": "Busca de nuevo los servidores Hyperion e indica los encontrados."
+      },
       "timeout_seconds": 30
     },
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
-    }
-  ],
-  "scene_triggers": [
-    {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
-      "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+      "key": "request_token",
+      "label": {
+        "en": "Request a token",
+        "fr": "Demander un jeton",
+        "de": "Token anfordern",
+        "es": "Solicitar un token"
       },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
-      "variables": [
-        {
-          "key": "target",
-          "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
-        }
-      ]
+      "description": {
+        "en": "For a Hyperion that asks for a token. Click, then within 90 seconds accept the \"Gladys Assistant\" request in the Hyperion web interface.",
+        "fr": "Pour un Hyperion qui demande un jeton. Cliquez, puis acceptez dans les 90 secondes la demande « Gladys Assistant » dans l'interface web d'Hyperion.",
+        "de": "Für ein Hyperion, das ein Token verlangt. Klicke und nimm dann innerhalb von 90 Sekunden die Anfrage „Gladys Assistant“ in der Weboberfläche von Hyperion an.",
+        "es": "Para un Hyperion que pide un token. Haga clic y, en 90 segundos, acepte la solicitud «Gladys Assistant» en la interfaz web de Hyperion."
+      },
+      "timeout_seconds": 120
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "start_effect",
+      "label": {
+        "en": "Start a Hyperion effect",
+        "fr": "Lancer un effet Hyperion",
+        "de": "Hyperion-Effekt starten",
+        "es": "Iniciar un efecto Hyperion"
+      },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "Turns the light on and starts an effect, for a while or until something else replaces it.",
+        "fr": "Allume la lumière et lance un effet, pour un temps ou jusqu'à ce qu'autre chose le remplace.",
+        "de": "Schaltet das Licht ein und startet einen Effekt, für eine Weile oder bis etwas anderes ihn ersetzt.",
+        "es": "Enciende la luz e inicia un efecto, durante un tiempo o hasta que otra cosa lo sustituya."
       },
       "timeout_seconds": 15,
       "fields": [
@@ -149,29 +225,957 @@
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Hyperion device",
+            "fr": "Appareil Hyperion",
+            "de": "Hyperion-Gerät",
+            "es": "Dispositivo Hyperion"
+          },
           "required": true
+        },
+        {
+          "key": "effect",
+          "type": "select",
+          "label": {
+            "en": "Effect",
+            "fr": "Effet",
+            "de": "Effekt",
+            "es": "Efecto"
+          },
+          "required": false,
+          "options": [
+            {
+              "value": "Atomic swirl",
+              "label": {
+                "en": "Atomic swirl",
+                "fr": "Atomic swirl",
+                "de": "Atomic swirl",
+                "es": "Atomic swirl"
+              }
+            },
+            {
+              "value": "Blue mood blobs",
+              "label": {
+                "en": "Blue mood blobs",
+                "fr": "Blue mood blobs",
+                "de": "Blue mood blobs",
+                "es": "Blue mood blobs"
+              }
+            },
+            {
+              "value": "Breath",
+              "label": {
+                "en": "Breath",
+                "fr": "Breath",
+                "de": "Breath",
+                "es": "Breath"
+              }
+            },
+            {
+              "value": "Candle",
+              "label": {
+                "en": "Candle",
+                "fr": "Candle",
+                "de": "Candle",
+                "es": "Candle"
+              }
+            },
+            {
+              "value": "Cinema brighten lights",
+              "label": {
+                "en": "Cinema brighten lights",
+                "fr": "Cinema brighten lights",
+                "de": "Cinema brighten lights",
+                "es": "Cinema brighten lights"
+              }
+            },
+            {
+              "value": "Cinema dim lights",
+              "label": {
+                "en": "Cinema dim lights",
+                "fr": "Cinema dim lights",
+                "de": "Cinema dim lights",
+                "es": "Cinema dim lights"
+              }
+            },
+            {
+              "value": "Cold mood blobs",
+              "label": {
+                "en": "Cold mood blobs",
+                "fr": "Cold mood blobs",
+                "de": "Cold mood blobs",
+                "es": "Cold mood blobs"
+              }
+            },
+            {
+              "value": "Collision",
+              "label": {
+                "en": "Collision",
+                "fr": "Collision",
+                "de": "Collision",
+                "es": "Collision"
+              }
+            },
+            {
+              "value": "Color traces",
+              "label": {
+                "en": "Color traces",
+                "fr": "Color traces",
+                "de": "Color traces",
+                "es": "Color traces"
+              }
+            },
+            {
+              "value": "Double swirl",
+              "label": {
+                "en": "Double swirl",
+                "fr": "Double swirl",
+                "de": "Double swirl",
+                "es": "Double swirl"
+              }
+            },
+            {
+              "value": "Fire",
+              "label": {
+                "en": "Fire",
+                "fr": "Fire",
+                "de": "Fire",
+                "es": "Fire"
+              }
+            },
+            {
+              "value": "Flags Germany/Sweden",
+              "label": {
+                "en": "Flags Germany/Sweden",
+                "fr": "Flags Germany/Sweden",
+                "de": "Flags Germany/Sweden",
+                "es": "Flags Germany/Sweden"
+              }
+            },
+            {
+              "value": "Full color mood blobs",
+              "label": {
+                "en": "Full color mood blobs",
+                "fr": "Full color mood blobs",
+                "de": "Full color mood blobs",
+                "es": "Full color mood blobs"
+              }
+            },
+            {
+              "value": "Green mood blobs",
+              "label": {
+                "en": "Green mood blobs",
+                "fr": "Green mood blobs",
+                "de": "Green mood blobs",
+                "es": "Green mood blobs"
+              }
+            },
+            {
+              "value": "Knight rider",
+              "label": {
+                "en": "Knight rider",
+                "fr": "Knight rider",
+                "de": "Knight rider",
+                "es": "Knight rider"
+              }
+            },
+            {
+              "value": "Led Test",
+              "label": {
+                "en": "Led Test",
+                "fr": "Led Test",
+                "de": "Led Test",
+                "es": "Led Test"
+              }
+            },
+            {
+              "value": "Light clock",
+              "label": {
+                "en": "Light clock",
+                "fr": "Light clock",
+                "de": "Light clock",
+                "es": "Light clock"
+              }
+            },
+            {
+              "value": "Lights",
+              "label": {
+                "en": "Lights",
+                "fr": "Lights",
+                "de": "Lights",
+                "es": "Lights"
+              }
+            },
+            {
+              "value": "Notify blue",
+              "label": {
+                "en": "Notify blue",
+                "fr": "Notify blue",
+                "de": "Notify blue",
+                "es": "Notify blue"
+              }
+            },
+            {
+              "value": "Pac-Man",
+              "label": {
+                "en": "Pac-Man",
+                "fr": "Pac-Man",
+                "de": "Pac-Man",
+                "es": "Pac-Man"
+              }
+            },
+            {
+              "value": "Plasma",
+              "label": {
+                "en": "Plasma",
+                "fr": "Plasma",
+                "de": "Plasma",
+                "es": "Plasma"
+              }
+            },
+            {
+              "value": "Police Lights Single",
+              "label": {
+                "en": "Police Lights Single",
+                "fr": "Police Lights Single",
+                "de": "Police Lights Single",
+                "es": "Police Lights Single"
+              }
+            },
+            {
+              "value": "Police Lights Solid",
+              "label": {
+                "en": "Police Lights Solid",
+                "fr": "Police Lights Solid",
+                "de": "Police Lights Solid",
+                "es": "Police Lights Solid"
+              }
+            },
+            {
+              "value": "Rainbow mood",
+              "label": {
+                "en": "Rainbow mood",
+                "fr": "Rainbow mood",
+                "de": "Rainbow mood",
+                "es": "Rainbow mood"
+              }
+            },
+            {
+              "value": "Rainbow swirl",
+              "label": {
+                "en": "Rainbow swirl",
+                "fr": "Rainbow swirl",
+                "de": "Rainbow swirl",
+                "es": "Rainbow swirl"
+              }
+            },
+            {
+              "value": "Rainbow swirl fast",
+              "label": {
+                "en": "Rainbow swirl fast",
+                "fr": "Rainbow swirl fast",
+                "de": "Rainbow swirl fast",
+                "es": "Rainbow swirl fast"
+              }
+            },
+            {
+              "value": "Random",
+              "label": {
+                "en": "Random",
+                "fr": "Random",
+                "de": "Random",
+                "es": "Random"
+              }
+            },
+            {
+              "value": "Red mood blobs",
+              "label": {
+                "en": "Red mood blobs",
+                "fr": "Red mood blobs",
+                "de": "Red mood blobs",
+                "es": "Red mood blobs"
+              }
+            },
+            {
+              "value": "Sea waves",
+              "label": {
+                "en": "Sea waves",
+                "fr": "Sea waves",
+                "de": "Sea waves",
+                "es": "Sea waves"
+              }
+            },
+            {
+              "value": "Snake",
+              "label": {
+                "en": "Snake",
+                "fr": "Snake",
+                "de": "Snake",
+                "es": "Snake"
+              }
+            },
+            {
+              "value": "Sparks",
+              "label": {
+                "en": "Sparks",
+                "fr": "Sparks",
+                "de": "Sparks",
+                "es": "Sparks"
+              }
+            },
+            {
+              "value": "Strobe red",
+              "label": {
+                "en": "Strobe red",
+                "fr": "Strobe red",
+                "de": "Strobe red",
+                "es": "Strobe red"
+              }
+            },
+            {
+              "value": "Strobe white",
+              "label": {
+                "en": "Strobe white",
+                "fr": "Strobe white",
+                "de": "Strobe white",
+                "es": "Strobe white"
+              }
+            },
+            {
+              "value": "System Shutdown",
+              "label": {
+                "en": "System Shutdown",
+                "fr": "System Shutdown",
+                "de": "System Shutdown",
+                "es": "System Shutdown"
+              }
+            },
+            {
+              "value": "Trails",
+              "label": {
+                "en": "Trails",
+                "fr": "Trails",
+                "de": "Trails",
+                "es": "Trails"
+              }
+            },
+            {
+              "value": "Trails color",
+              "label": {
+                "en": "Trails color",
+                "fr": "Trails color",
+                "de": "Trails color",
+                "es": "Trails color"
+              }
+            },
+            {
+              "value": "Warm mood blobs",
+              "label": {
+                "en": "Warm mood blobs",
+                "fr": "Warm mood blobs",
+                "de": "Warm mood blobs",
+                "es": "Warm mood blobs"
+              }
+            },
+            {
+              "value": "Waves with Color",
+              "label": {
+                "en": "Waves with Color",
+                "fr": "Waves with Color",
+                "de": "Waves with Color",
+                "es": "Waves with Color"
+              }
+            },
+            {
+              "value": "X-Mas",
+              "label": {
+                "en": "X-Mas",
+                "fr": "X-Mas",
+                "de": "X-Mas",
+                "es": "X-Mas"
+              }
+            }
+          ]
+        },
+        {
+          "key": "custom_effect",
+          "type": "string",
+          "label": {
+            "en": "Or another effect, by its name",
+            "fr": "Ou un autre effet, par son nom",
+            "de": "Oder ein anderer Effekt, über seinen Namen",
+            "es": "U otro efecto, por su nombre"
+          },
+          "description": {
+            "en": "An effect you created in Hyperion: its exact name. It replaces the choice above.",
+            "fr": "Un effet que vous avez créé dans Hyperion : son nom exact. Il remplace le choix ci-dessus.",
+            "de": "Ein Effekt, den du in Hyperion erstellt hast: sein genauer Name. Er ersetzt die Auswahl oben.",
+            "es": "Un efecto que usted ha creado en Hyperion: su nombre exacto. Sustituye la elección anterior."
+          },
+          "placeholder": {
+            "en": "e.g. My effect",
+            "fr": "ex. Mon effet",
+            "de": "z. B. Mein Effekt",
+            "es": "p. ej. Mi efecto"
+          },
+          "required": false
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration in minutes (optional)",
+            "fr": "Durée en minutes (facultative)",
+            "de": "Dauer in Minuten (optional)",
+            "es": "Duración en minutos (opcional)"
+          },
+          "description": {
+            "en": "Hyperion removes it by itself after this time, and the picture comes back. Empty: until something else replaces it.",
+            "fr": "Hyperion le retire de lui-même après ce délai, et l'image revient. Vide : jusqu'à ce qu'autre chose le remplace.",
+            "de": "Hyperion entfernt es nach dieser Zeit selbst, und das Bild kommt zurück. Leer: bis etwas anderes es ersetzt.",
+            "es": "Hyperion lo retira por sí mismo pasado este tiempo y la imagen vuelve. Vacío: hasta que otra cosa lo sustituya."
+          },
+          "required": false,
+          "min": 1,
+          "max": 1440
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "effect_name",
+          "type": "string",
+          "label": {
+            "en": "Effect name",
+            "fr": "Nom de l'effet",
+            "de": "Effektname",
+            "es": "Nombre del efecto"
+          }
+        }
+      ]
+    },
+    {
+      "key": "show_color",
+      "label": {
+        "en": "Show a color on Hyperion",
+        "fr": "Afficher une couleur sur Hyperion",
+        "de": "Farbe auf Hyperion anzeigen",
+        "es": "Mostrar un color en Hyperion"
+      },
+      "description": {
+        "en": "Turns the light on in a fixed color, for a while or until something else replaces it.",
+        "fr": "Allume la lumière d'une couleur fixe, pour un temps ou jusqu'à ce qu'autre chose la remplace.",
+        "de": "Schaltet das Licht in einer festen Farbe ein, für eine Weile oder bis etwas anderes sie ersetzt.",
+        "es": "Enciende la luz con un color fijo, durante un tiempo o hasta que otra cosa lo sustituya."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Hyperion device",
+            "fr": "Appareil Hyperion",
+            "de": "Hyperion-Gerät",
+            "es": "Dispositivo Hyperion"
+          },
+          "required": true
+        },
+        {
+          "key": "color",
+          "type": "string",
+          "label": {
+            "en": "Color",
+            "fr": "Couleur",
+            "de": "Farbe",
+            "es": "Color"
+          },
+          "description": {
+            "en": "In hexadecimal (#FF8800) or as red, green, blue (255, 136, 0).",
+            "fr": "En hexadécimal (#FF8800) ou en rouge, vert, bleu (255, 136, 0).",
+            "de": "Hexadezimal (#FF8800) oder als Rot, Grün, Blau (255, 136, 0).",
+            "es": "En hexadecimal (#FF8800) o como rojo, verde, azul (255, 136, 0)."
+          },
+          "placeholder": {
+            "en": "e.g. #FF8800",
+            "fr": "ex. #FF8800",
+            "de": "z. B. #FF8800",
+            "es": "p. ej. #FF8800"
+          },
+          "required": true
+        },
+        {
+          "key": "duration",
+          "type": "number",
+          "label": {
+            "en": "Duration in minutes (optional)",
+            "fr": "Durée en minutes (facultative)",
+            "de": "Dauer in Minuten (optional)",
+            "es": "Duración en minutos (opcional)"
+          },
+          "description": {
+            "en": "Hyperion removes it by itself after this time, and the picture comes back. Empty: until something else replaces it.",
+            "fr": "Hyperion le retire de lui-même après ce délai, et l'image revient. Vide : jusqu'à ce qu'autre chose le remplace.",
+            "de": "Hyperion entfernt es nach dieser Zeit selbst, und das Bild kommt zurück. Leer: bis etwas anderes es ersetzt.",
+            "es": "Hyperion lo retira por sí mismo pasado este tiempo y la imagen vuelve. Vacío: hasta que otra cosa lo sustituya."
+          },
+          "required": false,
+          "min": 1,
+          "max": 1440
+        }
+      ],
+      "outputs": [
+        {
+          "key": "color",
+          "type": "string",
+          "label": {
+            "en": "Color shown",
+            "fr": "Couleur affichée",
+            "de": "Angezeigte Farbe",
+            "es": "Color mostrado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "restore_ambilight",
+      "label": {
+        "en": "Back to the Ambilight",
+        "fr": "Revenir à l'Ambilight",
+        "de": "Zurück zum Ambilight",
+        "es": "Volver al Ambilight"
+      },
+      "description": {
+        "en": "Removes the colors and effects shown over the picture, and turns the video capture on again if it was turned off.",
+        "fr": "Retire les couleurs et effets affichés par-dessus l'image, et rallume la capture vidéo si elle était coupée.",
+        "de": "Entfernt die über dem Bild angezeigten Farben und Effekte und schaltet die Videoaufnahme wieder ein, falls sie aus war.",
+        "es": "Quita los colores y efectos mostrados sobre la imagen y vuelve a activar la captura de vídeo si estaba desactivada."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Hyperion device",
+            "fr": "Appareil Hyperion",
+            "de": "Hyperion-Gerät",
+            "es": "Dispositivo Hyperion"
+          },
+          "required": true
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "hyperion",
+      "label": {
+        "en": "Hyperion",
+        "fr": "Hyperion",
+        "de": "Hyperion",
+        "es": "Hyperion"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "What the TV light shows, back to the Ambilight, two effects and on/off in one tap.",
+        "fr": "Ce qu'affiche la lumière de la TV, retour à l'Ambilight, deux effets et marche/arrêt.",
+        "de": "Was das TV-Licht zeigt, zurück zum Ambilight, zwei Effekte und an/aus per Tippen.",
+        "es": "Lo que muestra la luz de la TV, volver al Ambilight, dos efectos y encendido en un toque."
+      },
+      "icon": "tv",
+      "action_timeout_seconds": 15,
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Hyperion device",
+            "fr": "Appareil Hyperion",
+            "de": "Hyperion-Gerät",
+            "es": "Dispositivo Hyperion"
+          },
+          "description": {
+            "en": "Empty: the first Hyperion device added to Gladys.",
+            "fr": "Vide : le premier appareil Hyperion ajouté à Gladys.",
+            "de": "Leer: das erste zu Gladys hinzugefügte Hyperion-Gerät.",
+            "es": "Vacío: el primer dispositivo Hyperion añadido a Gladys."
+          },
+          "required": false
+        },
+        {
+          "key": "effects",
+          "type": "multi_select",
+          "label": {
+            "en": "Effect buttons",
+            "fr": "Boutons d'effets",
+            "de": "Effekt-Schaltflächen",
+            "es": "Botones de efectos"
+          },
+          "description": {
+            "en": "The first two chosen become one-tap buttons.",
+            "fr": "Les deux premiers choisis deviennent des boutons.",
+            "de": "Die ersten beiden gewählten werden zu Schaltflächen.",
+            "es": "Los dos primeros elegidos se convierten en botones."
+          },
+          "required": false,
+          "default": ["Rainbow swirl", "Warm mood blobs"],
+          "options": [
+            {
+              "value": "Atomic swirl",
+              "label": {
+                "en": "Atomic swirl",
+                "fr": "Atomic swirl",
+                "de": "Atomic swirl",
+                "es": "Atomic swirl"
+              }
+            },
+            {
+              "value": "Blue mood blobs",
+              "label": {
+                "en": "Blue mood blobs",
+                "fr": "Blue mood blobs",
+                "de": "Blue mood blobs",
+                "es": "Blue mood blobs"
+              }
+            },
+            {
+              "value": "Breath",
+              "label": {
+                "en": "Breath",
+                "fr": "Breath",
+                "de": "Breath",
+                "es": "Breath"
+              }
+            },
+            {
+              "value": "Candle",
+              "label": {
+                "en": "Candle",
+                "fr": "Candle",
+                "de": "Candle",
+                "es": "Candle"
+              }
+            },
+            {
+              "value": "Cinema brighten lights",
+              "label": {
+                "en": "Cinema brighten lights",
+                "fr": "Cinema brighten lights",
+                "de": "Cinema brighten lights",
+                "es": "Cinema brighten lights"
+              }
+            },
+            {
+              "value": "Cinema dim lights",
+              "label": {
+                "en": "Cinema dim lights",
+                "fr": "Cinema dim lights",
+                "de": "Cinema dim lights",
+                "es": "Cinema dim lights"
+              }
+            },
+            {
+              "value": "Cold mood blobs",
+              "label": {
+                "en": "Cold mood blobs",
+                "fr": "Cold mood blobs",
+                "de": "Cold mood blobs",
+                "es": "Cold mood blobs"
+              }
+            },
+            {
+              "value": "Collision",
+              "label": {
+                "en": "Collision",
+                "fr": "Collision",
+                "de": "Collision",
+                "es": "Collision"
+              }
+            },
+            {
+              "value": "Color traces",
+              "label": {
+                "en": "Color traces",
+                "fr": "Color traces",
+                "de": "Color traces",
+                "es": "Color traces"
+              }
+            },
+            {
+              "value": "Double swirl",
+              "label": {
+                "en": "Double swirl",
+                "fr": "Double swirl",
+                "de": "Double swirl",
+                "es": "Double swirl"
+              }
+            },
+            {
+              "value": "Fire",
+              "label": {
+                "en": "Fire",
+                "fr": "Fire",
+                "de": "Fire",
+                "es": "Fire"
+              }
+            },
+            {
+              "value": "Flags Germany/Sweden",
+              "label": {
+                "en": "Flags Germany/Sweden",
+                "fr": "Flags Germany/Sweden",
+                "de": "Flags Germany/Sweden",
+                "es": "Flags Germany/Sweden"
+              }
+            },
+            {
+              "value": "Full color mood blobs",
+              "label": {
+                "en": "Full color mood blobs",
+                "fr": "Full color mood blobs",
+                "de": "Full color mood blobs",
+                "es": "Full color mood blobs"
+              }
+            },
+            {
+              "value": "Green mood blobs",
+              "label": {
+                "en": "Green mood blobs",
+                "fr": "Green mood blobs",
+                "de": "Green mood blobs",
+                "es": "Green mood blobs"
+              }
+            },
+            {
+              "value": "Knight rider",
+              "label": {
+                "en": "Knight rider",
+                "fr": "Knight rider",
+                "de": "Knight rider",
+                "es": "Knight rider"
+              }
+            },
+            {
+              "value": "Led Test",
+              "label": {
+                "en": "Led Test",
+                "fr": "Led Test",
+                "de": "Led Test",
+                "es": "Led Test"
+              }
+            },
+            {
+              "value": "Light clock",
+              "label": {
+                "en": "Light clock",
+                "fr": "Light clock",
+                "de": "Light clock",
+                "es": "Light clock"
+              }
+            },
+            {
+              "value": "Lights",
+              "label": {
+                "en": "Lights",
+                "fr": "Lights",
+                "de": "Lights",
+                "es": "Lights"
+              }
+            },
+            {
+              "value": "Notify blue",
+              "label": {
+                "en": "Notify blue",
+                "fr": "Notify blue",
+                "de": "Notify blue",
+                "es": "Notify blue"
+              }
+            },
+            {
+              "value": "Pac-Man",
+              "label": {
+                "en": "Pac-Man",
+                "fr": "Pac-Man",
+                "de": "Pac-Man",
+                "es": "Pac-Man"
+              }
+            },
+            {
+              "value": "Plasma",
+              "label": {
+                "en": "Plasma",
+                "fr": "Plasma",
+                "de": "Plasma",
+                "es": "Plasma"
+              }
+            },
+            {
+              "value": "Police Lights Single",
+              "label": {
+                "en": "Police Lights Single",
+                "fr": "Police Lights Single",
+                "de": "Police Lights Single",
+                "es": "Police Lights Single"
+              }
+            },
+            {
+              "value": "Police Lights Solid",
+              "label": {
+                "en": "Police Lights Solid",
+                "fr": "Police Lights Solid",
+                "de": "Police Lights Solid",
+                "es": "Police Lights Solid"
+              }
+            },
+            {
+              "value": "Rainbow mood",
+              "label": {
+                "en": "Rainbow mood",
+                "fr": "Rainbow mood",
+                "de": "Rainbow mood",
+                "es": "Rainbow mood"
+              }
+            },
+            {
+              "value": "Rainbow swirl",
+              "label": {
+                "en": "Rainbow swirl",
+                "fr": "Rainbow swirl",
+                "de": "Rainbow swirl",
+                "es": "Rainbow swirl"
+              }
+            },
+            {
+              "value": "Rainbow swirl fast",
+              "label": {
+                "en": "Rainbow swirl fast",
+                "fr": "Rainbow swirl fast",
+                "de": "Rainbow swirl fast",
+                "es": "Rainbow swirl fast"
+              }
+            },
+            {
+              "value": "Random",
+              "label": {
+                "en": "Random",
+                "fr": "Random",
+                "de": "Random",
+                "es": "Random"
+              }
+            },
+            {
+              "value": "Red mood blobs",
+              "label": {
+                "en": "Red mood blobs",
+                "fr": "Red mood blobs",
+                "de": "Red mood blobs",
+                "es": "Red mood blobs"
+              }
+            },
+            {
+              "value": "Sea waves",
+              "label": {
+                "en": "Sea waves",
+                "fr": "Sea waves",
+                "de": "Sea waves",
+                "es": "Sea waves"
+              }
+            },
+            {
+              "value": "Snake",
+              "label": {
+                "en": "Snake",
+                "fr": "Snake",
+                "de": "Snake",
+                "es": "Snake"
+              }
+            },
+            {
+              "value": "Sparks",
+              "label": {
+                "en": "Sparks",
+                "fr": "Sparks",
+                "de": "Sparks",
+                "es": "Sparks"
+              }
+            },
+            {
+              "value": "Strobe red",
+              "label": {
+                "en": "Strobe red",
+                "fr": "Strobe red",
+                "de": "Strobe red",
+                "es": "Strobe red"
+              }
+            },
+            {
+              "value": "Strobe white",
+              "label": {
+                "en": "Strobe white",
+                "fr": "Strobe white",
+                "de": "Strobe white",
+                "es": "Strobe white"
+              }
+            },
+            {
+              "value": "System Shutdown",
+              "label": {
+                "en": "System Shutdown",
+                "fr": "System Shutdown",
+                "de": "System Shutdown",
+                "es": "System Shutdown"
+              }
+            },
+            {
+              "value": "Trails",
+              "label": {
+                "en": "Trails",
+                "fr": "Trails",
+                "de": "Trails",
+                "es": "Trails"
+              }
+            },
+            {
+              "value": "Trails color",
+              "label": {
+                "en": "Trails color",
+                "fr": "Trails color",
+                "de": "Trails color",
+                "es": "Trails color"
+              }
+            },
+            {
+              "value": "Warm mood blobs",
+              "label": {
+                "en": "Warm mood blobs",
+                "fr": "Warm mood blobs",
+                "de": "Warm mood blobs",
+                "es": "Warm mood blobs"
+              }
+            },
+            {
+              "value": "Waves with Color",
+              "label": {
+                "en": "Waves with Color",
+                "fr": "Waves with Color",
+                "de": "Waves with Color",
+                "es": "Waves with Color"
+              }
+            },
+            {
+              "value": "X-Mas",
+              "label": {
+                "en": "X-Mas",
+                "fr": "X-Mas",
+                "de": "X-Mas",
+                "es": "X-Mas"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }
