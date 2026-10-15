@@ -30,6 +30,20 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration stores and sends:
+
+- `/data/hyperion-state.json` (the container's data volume, readable by the
+  container user only): the Hyperion servers found (id, address, port, name,
+  version, instances, components and effect names), the captures the Ambilight
+  switch turned off, and the **API tokens** obtained with "Request a token".
+- The optional API token of the configuration is stored by Gladys like any
+  `secret` field. No token is ever written to the logs.
+- Network: unicast TCP connections to the JSON API of the Hyperion servers of
+  the local network (port 19444 by default), in clear text — the Hyperion
+  JSON API has no encryption. SSDP and mDNS discovery are run by the Gladys
+  core on the integration's behalf. No cloud service, no outgoing Internet
+  connection.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and Hyperion and the other devices the integration talks to.

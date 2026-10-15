@@ -16,12 +16,13 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "token"   # tests whose name matches
+node scripts/probe.mjs <ip> [port]        # read-only check of a real Hyperion
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
-npx github:GladysAssistant/integration-store .   # store admission checks
+npx github:GladysAssistant/integration-store . --skip-image-check   # store admission checks
 ```
 
 The CI (`.github/workflows/ci.yml`) runs `format:check`, `lint` and `test` on
@@ -31,16 +32,26 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub; "Search" and "Request a token" reports
+src/hub.js                        discovery, one link per instance, states, commands, refresh timer, tokens
+src/devices.js                    Hyperion instance -> Gladys device (features, values)
+src/hyperion/client.js            JSON API client: TCP 19444, newline JSON, tan matching, pushed updates
+src/hyperion/model.js             reading serverinfo and its *-update messages; colours
+src/hyperion/discovery.js         raw SSDP / mDNS results -> candidate servers
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
 src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/effects.js                    the effects Hyperion ships with (static lists of the manifest)
+src/i18n.js                       every text produced by the code, en/fr/de/es
+src/issues.js                     deduplicated problem logs (one line when it starts, one when it ends)
+src/store.js                      /data/hyperion-state.json (servers, tokens, captures turned off)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+scripts/probe.mjs                 read-only check of a real server (sysinfo, serverinfo)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/helpers/fakeHyperion.js      a fake Hyperion server on loopback TCP, from the fixtures
+test/fixtures/hyperion/           real serverinfo/sysinfo replies (hyperion-py tests, MIT)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,10 +81,18 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** comes in four languages (`en`, `fr`, `de`, `es`):
+  manifest texts, feature names, action and error messages, widget texts (all
+  of the code's texts live in `src/i18n.js`), and `docs/{en,fr,de,es}.md` with
+  the same sections. German says "du", Spanish "usted". `test/i18n.test.js`
+  checks it.
+- **Logs.** The info level tells what changes (a server found, lost or back, a
+  command of the user), never a push, a refresh or a state. A failure that
+  repeats goes through `createIssueLog` (`src/issues.js`). `test/live.test.js`
+  fails if a normal cycle writes at the info level or if a token is logged.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
-  in English. Tests never touch the network.
+  in English. Tests never touch the network (the fake Hyperion listens on
+  127.0.0.1 only).
 
 ---
 
@@ -233,3 +252,72 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+---
+
+# Hyperion : ce qu'il faut savoir (15/10/2026)
+
+Intégration écrite **sans le matériel** : rien n'a tourné contre un vrai Hyperion. Les faits
+ci-dessous viennent du code d'Hyperion.ng (MIT, `libsrc/api`, `libsrc/ssdp`, `libsrc/mdns`), de
+`hyperion-py` (MIT) et de l'intégration Home Assistant. `scripts/probe.mjs <ip>` (lecture seule) est
+à lancer sur un vrai serveur avant toute conclusion.
+
+## API JSON
+
+- TCP 19444, un objet JSON par ligne dans les deux sens. Chaque requête porte un `tan` renvoyé
+  dans la réponse ; les vieux serveurs répondent `tan: 0` à une requête mal formée
+  (hyperion.ng#1001) : le client rend alors la réponse à la plus ancienne requête de même commande.
+- Une connexion est liée à **une instance** (`instance switchTo`, qui exige une instance en marche) :
+  une connexion par instance en marche. `serverinfo` + `subscribe` renvoie l'état complet et fait
+  pousser `components-update`, `priorities-update`, `adjustment-update`, `effects-update`,
+  `instance-update`. L'instance 0 peut être arrêtée.
+- **Authentification** : une connexion depuis le réseau local est autorisée sans jeton tant que
+  « Local API Authentication » est désactivée (défaut). `sysinfo`, `serverinfo` et les commandes
+  exigent l'autorisation ; `authorize tokenRequired`, `login` et `requestToken` non. `requestToken`
+  ne répond qu'une fois la demande acceptée ou refusée dans l'interface web (délai serveur 180 s ;
+  l'action Gladys est plafonnée à 120 s, on attend 100 s puis on retire la demande avec
+  `accept: false`). Les jetons obtenus vont dans `/data/hyperion-state.json`, jamais dans un journal.
+- **Priorités** : la plus petite valeur gagne ; l'API accepte 1 à 253 (0 démarrage, 254 effet de
+  fond, 255 éteint). Captures par défaut : USB 240, écran 250. Gladys pose ses couleurs et effets à
+  `priority` (128) avec `origin: "Gladys"` (4 à 20 caractères). La source visible n'est pas toujours
+  la première de la liste (hyperion.ng#964) : chercher `visible: true`.
+- **Allumé** = composants `ALL` et `LEDDEVICE` actifs (lecture de hyperion-py). Éteindre envoie
+  `componentstate ALL false` (l'instance reste joignable) ; allumer une instance arrêtée envoie
+  `startInstance` par une autre connexion du serveur.
+- Hypothèse non vérifiée : couper une capture (V4L, GRABBER) la retire de la liste des priorités ;
+  par prudence, `captureVisible` exige aussi le composant actif.
+
+## Découverte
+
+- SSDP : `ST: urn:hyperion-project.org:device:basic:1`, `USN: uuid:<id>` (= `sysinfo.hyperion.id`),
+  en-têtes `HYPERION-NAME` et `HYPERION-JSS-PORT` depuis 2.0 (absents des alpha : port 19444).
+- mDNS : `_hyperiond-json._tcp`, TXT `id=<id>` et `version=`.
+- Le cœur ne scanne en SSDP que la **première** entrée `ssdp` du manifeste, et une seule analyse à
+  la fois par intégration : SSDP puis mDNS, l'un après l'autre.
+- HyperHDR parle la même API mais s'annonce autrement : saisie manuelle (non testé).
+
+## Choix
+
+- `should_poll: false` : les états sont poussés par Hyperion ; le minuteur du hub relit chaque
+  instance toutes les minutes, reconnecte, et relance une recherche toutes les 30 min tant qu'un
+  serveur manque. Heartbeat 12 h via `publishChangedStates`.
+- Les noms des fonctionnalités suivent `language` (défaut `fr`) au moment de la création.
+- « Ambilight » allumé = une capture vidéo est la source visible. L'allumer efface **toutes** les
+  priorités COLOR/EFFECT de 1 à 253 (Gladys et autres clients), et rallume les captures que
+  l'interrupteur avait coupées (mémorisées dans `/data`) ; l'éteindre coupe les captures actives.
+- Effets du manifeste (action de scène, widget) : liste statique des effets fournis
+  (`src/effects.js`), plus un champ libre pour un effet personnel ; un test lie les deux.
+- Aucun déclencheur de scène : les états des appareils suffisent.
+- `gladys_version` `>=5.1.0` : aucun bouton de widget à formulaire.
+
+## Pièges de la session
+
+- `gladys.fake.action()` du SDK rend `{ success, data: { message } }` : le texte est dans
+  `data.message`, pas dans `data`.
+- Ne pas simuler `process.stdout.write` dans un test : le rapporteur de `node --test` écrit par là et
+  des résultats disparaissent. Le logger du SDK écrit par `console.log` / `console.error` : simuler
+  ceux-là.
+- Le garde-fou allemand de `test/i18n.test.js` refuse aussi un « Sie »/« Ihre » de troisième
+  personne en début de phrase (après deux-points) : tourner la phrase autrement.
+- Le validateur du store refuse un `default` sur un champ `secret` (« not allowed for secret
+  fields ») : le champ `token` n'en a pas, `DEFAULT_CONFIG.token` reste `''` côté code.

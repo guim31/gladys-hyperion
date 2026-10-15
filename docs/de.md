@@ -1,0 +1,253 @@
+# Hyperion
+
+Steuere deine [Hyperion.ng](https://hyperion-project.org)-Ambientebeleuchtung
+mit Gladys: den LED-Streifen hinter dem Fernseher, gesteuert von einem
+Raspberry Pi (oder einem anderen Rechner mit Hyperion), der die Farben des
+Bildes übernimmt — der „Ambilight“-Effekt.
+
+> **Ohne die Hardware entwickelt: Rückmeldungen sind willkommen.** Diese
+> Integration wurde anhand der Dokumentation der JSON-API von Hyperion, des
+> Codes von Hyperion.ng und der echten Serverantworten aus der Bibliothek
+> `hyperion-py` geschrieben und getestet, nicht mit einem echten
+> Hyperion-Server. Sag uns im Gladys-Forum oder in den GitHub-Issues, was
+> funktioniert und was nicht.
+>
+> Diese Integration steht in keiner Verbindung zum Hyperion-Projekt.
+
+## Was du bekommst
+
+- **Ein Gladys-Gerät pro Hyperion-Instanz.** Eine Instanz ist ein in Hyperion
+  konfigurierter LED-Ausgang (meist gibt es einen; ein zweiter kann einen
+  WLED-Streifen, eine Hue-Bridge… ansteuern).
+- Auf jedem Gerät:
+  - **Licht**: Ein/Aus der Instanz;
+  - **Helligkeit** (0-100 %), **Farbe** (eine feste Farbe);
+  - **Effekt**: die Effekte deines Servers (die mitgelieferten und deine
+    eigenen) oder „Keiner“;
+  - **Ambilight**: an, wenn die LEDs dem Bild folgen (Bildschirm- oder
+    USB-Aufnahme);
+  - **Aktuelle Anzeige**: ein Text, der sagt, was die LEDs zeigen (Ambilight,
+    ein Effekt, eine Farbe, aus…);
+  - ein Schalter pro **Komponente** deiner Instanz: LED-Ausgang,
+    Bildschirmaufnahme, USB-Aufnahme, Audioaufnahme, Glättung,
+    Schwarze-Balken-Erkennung.
+- **Drei Szenenaktionen**: einen Effekt starten, eine Farbe anzeigen (beides
+  auf Wunsch für eine bestimmte Dauer), zurück zum Ambilight.
+- **Ein Dashboard-Widget**: was das Licht zeigt, und Schaltflächen zum
+  Antippen (Ambilight, zwei Effekte deiner Wahl, Ein/Aus).
+
+Änderungen, die anderswo gemacht werden (Weboberfläche von Hyperion,
+Fernbedienung, andere Hausautomation), erscheinen in Gladys in weniger als
+einer Sekunde: Hyperion sendet sie.
+
+## Voraussetzungen
+
+- Gladys Assistant **5.1.0** oder neuer.
+- Ein **Hyperion.ng**-Server (Version 2.0 oder neuer) im selben lokalen
+  Netzwerk wie Gladys, mit aktiviertem **JSON-Server** (standardmäßig aktiv,
+  auf Port 19444). Das alte „klassische“ Hyperion (vor 2.0) wird nicht
+  unterstützt.
+- **HyperHDR** spricht dieselbe JSON-API und sollte ebenfalls funktionieren,
+  wenn du seine Adresse von Hand eingibst (nicht getestet).
+- Kein Konto, keine Cloud: Alles bleibt in deinem Netzwerk.
+
+## Installation und Konfiguration
+
+1. Öffne in Gladys **Integrationen**, dann **Von GitHub installieren**, und
+   gib `https://github.com/guim31/gladys-hyperion` an.
+2. Öffne den Tab **Konfiguration** der Integration. Nichts ist Pflicht: Mit
+   den Standardeinstellungen sucht Gladys deine Hyperion-Server im Netzwerk.
+3. Öffne den Tab **Entdecken**: Ein Gerät pro Hyperion-Instanz wird
+   aufgelistet. Füge die hinzu, die du möchtest.
+
+### Einstellungen
+
+| Einstellung                | Was sie bewirkt                                                                                                                                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| IP-Adressen der Server     | Optional. Nur für einen Server, den die automatische Erkennung nicht findet (anderes Subnetz, SSDP/mDNS blockiert). Trenne sie mit Kommas; gib den Port der JSON-API an, wenn er nicht 19444 ist (`192.168.1.20:19445`).             |
+| API-Token                  | Optional. Nur wenn Hyperion ein Token verlangt und du selbst eines erstellt hast. Die Schaltfläche **Token anfordern** erledigt das für dich.                                                                                        |
+| Priorität von Gladys       | Die Priorität, die Gladys für seine Farben und Effekte nutzt (1 bis 253, standardmäßig 128). Hyperion zeigt die Quelle mit der **kleinsten** Nummer: 128 liegt vor der Bildschirm- und der USB-Aufnahme (standardmäßig 240 und 250). |
+| Sprache der Funktionsnamen | Die Sprache der Namen, die den Funktionen **neuer** Geräte gegeben werden, und des Texts „Aktuelle Anzeige“. Ein Gerät behält die Namen, mit denen es erstellt wurde.                                                                |
+
+### Automatische Erkennung
+
+Hyperion kündigt sich im Netzwerk an (SSDP und mDNS). Die Integration läuft
+in einem Container, der diese Ankündigungen nicht hören kann. Deshalb bittet sie Gladys, für sie zuzuhören (vermittelte Erkennung). Findet sie nichts, sagt dir
+die Schaltfläche **Server suchen**, warum; gib dann die IP-Adresse des Servers
+in der Konfiguration ein.
+
+Ist ein Server einmal bekannt, wird er über seine **ID** verfolgt (die
+Hyperion in seinen Systeminformationen zeigt), nicht über seine Adresse:
+Bekommt er eine neue IP-Adresse, findet ihn die nächste Suche wieder, und
+deine Geräte bleiben erhalten.
+
+### Wenn Hyperion ein Token verlangt
+
+Standardmäßig verlangt Hyperion im lokalen Netzwerk nichts. Hast du in
+Hyperion die **Authentifizierung der lokalen API** aktiviert (Seite
+Netzwerkdienste), meldet Gladys „Hyperion verlangt ein Token“. Dann:
+
+1. Klicke in der Konfiguration der Integration auf **Token anfordern**;
+2. öffne innerhalb von 90 Sekunden die Weboberfläche von Hyperion: Dort erscheint
+   eine Anfrage namens **Gladys Assistant**. Nimm sie an.
+
+Das Token wird im Datenordner der Integration aufbewahrt und ab dann
+verwendet. Du kannst auch selbst in Hyperion ein Token erstellen
+(Token-Verwaltung) und es in die Einstellung **API-Token** einfügen.
+
+## Die Geräte
+
+### Licht, Helligkeit, Farbe
+
+- **Licht** schaltet die Instanz ein oder aus (der Hauptschalter von Hyperion
+  für diese Instanz). Eine in Hyperion gestoppte Instanz einzuschalten startet
+  sie.
+- **Helligkeit** ist die Helligkeitseinstellung von Hyperion (dieselbe wie in
+  seiner Weboberfläche). Eine Änderung schaltet das Licht ein; 0 schaltet es
+  aus.
+- **Farbe** zeigt eine feste Farbe mit der Priorität von Gladys und überdeckt
+  das Ambilight, bis du dorthin zurückkehrst. Während ein Effekt oder das
+  Ambilight läuft, ist die in Gladys angezeigte Farbe die zuletzt gesetzte.
+
+### Effekt
+
+Die Liste enthält die Effekte deines Servers, deine eigenen eingeschlossen.
+Einen auszuwählen startet ihn mit der Priorität von Gladys; **Keiner**
+entfernt, was Gladys angezeigt hat (Farbe oder Effekt), und das Bild kommt
+zurück.
+
+### Ambilight
+
+An, wenn die LEDs dem Bild folgen (Bildschirm- oder USB-Aufnahme).
+
+- **Einschalten** entfernt die über dem Bild angezeigten Farben und Effekte —
+  die von Gladys, aber auch die einer anderen Anwendung (Weboberfläche von
+  Hyperion, andere Hausautomation) — und schaltet die Aufnahme wieder ein,
+  falls der Schalter sie ausgeschaltet hatte.
+- **Ausschalten** schaltet die Videoaufnahmen (Bildschirm und USB) aus. Die
+  Integration merkt sich, welche an waren, um später dieselben wieder
+  einzuschalten.
+
+### Aktuelle Anzeige
+
+Ein Text, der sagt, was die LEDs zeigen: „Ambilight (USB-Aufnahme)“, „Effekt:
+Rainbow swirl“, „Farbe #FF8800“, „Aus“, „Nichts“ oder eine andere Quelle
+(zum Beispiel ein Kodi- oder HyperHDR-Client).
+
+### Komponentenschalter
+
+Ein Schalter pro Komponente deiner Instanz: LED-Ausgang, Bildschirmaufnahme,
+USB-Aufnahme, Audioaufnahme (Hyperion 2.1), Glättung,
+Schwarze-Balken-Erkennung. Diese Schalter tun genau das, was die Schalter der
+Weboberfläche von Hyperion tun. Die Netzwerk-Komponenten (Forwarder,
+Boblight-Server) werden nicht angeboten.
+
+## Widget
+
+Füge das Widget **Hyperion** zu einem Dashboard hinzu. Es zeigt den Namen der
+Instanz, ihre Helligkeit (live) und was sie gerade zeigt, mit Schaltflächen:
+
+- **Ambilight**: zurück zum Bild (wie der Schalter);
+- zwei in den Widget-Einstellungen gewählte **Effekte**;
+- **Ausschalten** / **Einschalten**.
+
+Die aktive Auswahl trägt ein ✓-Symbol. Wähle in den Einstellungen das Gerät
+(standardmäßig das erste zu Gladys hinzugefügte Hyperion-Gerät) und die
+Effekte der Schaltflächen (die ersten beiden gewählten werden verwendet).
+
+## Szenenaktionen
+
+| Aktion                      | Einstellungen                                                                                           | Ergebnis für die folgenden Aktionen |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Hyperion-Effekt starten     | Gerät; ein Effekt aus der Liste oder der genaue Name eines anderen Effekts; Dauer in Minuten (optional) | Effektname                          |
+| Farbe auf Hyperion anzeigen | Gerät; Farbe (`#FF8800` oder `255, 136, 0`); Dauer in Minuten (optional)                                | Angezeigte Farbe                    |
+| Zurück zum Ambilight        | Gerät                                                                                                   | —                                   |
+
+Mit einer **Dauer** entfernt Hyperion den Effekt oder die Farbe nach Ablauf
+der Zeit selbst, und das Bild kommt zurück — auch wenn Gladys zwischendurch
+neu startet. Ohne Dauer bleiben sie, bis etwas anderes sie ersetzt.
+
+Ein- und Ausschalten, Helligkeit und Farbe gibt es auch als die üblichen
+Gladys-Szenenaktionen auf den Funktionen des Geräts.
+
+Die Integration löst keinen eigenen Szenenauslöser aus: Nutze den üblichen
+Auslöser „ein Gerätewert ändert sich“ auf den Funktionen (Licht, Ambilight,
+Aktuelle Anzeige…).
+
+## Szenenbeispiele
+
+- **Türklingel**: Wenn es klingelt, _Hyperion-Effekt starten_ „Notify blue“
+  für 1 Minute — das TV-Licht blinkt blau, dann kommt das Ambilight von
+  selbst zurück.
+- **Filmabend**: Um 21 Uhr oder wenn der Fernseher angeht, _Zurück zum
+  Ambilight_ und die Helligkeit auf 60 % setzen.
+- **Alarm**: Wenn der Alarm ausgelöst wird, _Farbe auf Hyperion anzeigen_
+  `#FF0000` für 5 Minuten.
+- **Gute Nacht**: Um Mitternacht, wenn das Licht noch an ist, ausschalten.
+
+## Aktualisierung und Netzwerk
+
+- Eine TCP-Verbindung pro laufender Instanz zur JSON-API des Servers (Port
+  19444), die offen bleibt: Hyperion sendet jede Änderung, sobald sie
+  passiert.
+- Jede Minute liest die Integration außerdem jede Instanz neu (um ein
+  verlorenes Update oder eine stumme Verbindung aufzufangen) und verbindet neu,
+  was abgebrochen ist. Ein Server, der nicht antwortet, wird alle 30 Minuten
+  erneut gesucht.
+- Gladys erhält nur die Werte, die sich ändern, plus alle 12 Stunden einmal
+  alle Werte (damit nie „Kein aktueller Wert“ erscheint).
+- Alles bleibt in deinem lokalen Netzwerk: kein Cloud-Dienst, kein Konto,
+  kein Kontingent.
+
+## Fehlerbehebung
+
+- **Kein Gerät im Tab Entdecken**: Klicke in der Konfiguration auf **Server
+  suchen** und lies den Bericht. Ist die automatische Erkennung nicht
+  verfügbar oder findet sie nichts, gib die IP-Adresse des Servers ein. Prüfe
+  in Hyperion (Netzwerkdienste), ob der JSON-Server aktiviert ist, und seinen
+  Port.
+- **„Hyperion verlangt ein Token“**: siehe „Wenn Hyperion ein Token
+  verlangt“. Ein in Hyperion gelöschtes Token wird abgelehnt: Fordere ein
+  neues an.
+- **„Der Hyperion-Server antwortet nicht“**: Der Raspberry Pi ist aus, hat
+  eine neue Adresse, oder der Port des JSON-Servers hat sich geändert. Die
+  Integration versucht es jede Minute erneut und sucht alle 30 Minuten wieder
+  im Netzwerk.
+- **Eine in Gladys gesetzte Farbe erscheint nicht**: Eine andere Quelle hat
+  eine kleinere Prioritätsnummer (die Weboberfläche von Hyperion, eine andere
+  Anwendung). Senke die Priorität von Gladys in der Konfiguration, oder nutze
+  zuerst _Zurück zum Ambilight_.
+- **Neue Effekte oder eine neue Instanz erscheinen nicht**: Öffne den Tab
+  Entdecken und aktualisiere das Gerät („Aktualisieren“). Die Namen der
+  Funktionen ändern sich nie, sobald ein Gerät erstellt ist.
+- **Protokolle**: Die Integration schreibt nur, was sich ändert (ein Server
+  gefunden, verloren oder zurück, ein Befehl). Setze die Umgebungsvariable
+  `LOG_LEVEL` auf `debug`, um alles zu sehen. Tokens werden nie in die
+  Protokolle geschrieben.
+
+## Grenzen
+
+- **Ohne die Hardware entwickelt**: nur mit einem simulierten Server getestet
+  (siehe oben auf dieser Seite).
+- Nur Hyperion.ng 2.0 oder neuer; HyperHDR nicht getestet.
+- Der Ambilight-Schalter kennt die Bildschirm- und die USB-Aufnahme; die
+  Audioaufnahme (Hyperion 2.1) ist ein eigener Schalter.
+- Die Effektlisten der Szenenaktion und der Widget-Einstellungen sind die mit
+  Hyperion gelieferten Effekte (Gladys kann dort deinen Server nicht lesen):
+  Für einen eigenen Effekt gib seinen genauen Namen in der Szenenaktion ein.
+- Das Ambilight einzuschalten entfernt die Farben und Effekte aller
+  Anwendungen, nicht nur die von Gladys.
+- Eine gestoppte Instanz behält die Funktionen, die sie beim letzten Lauf
+  hatte.
+- Keine Videovorschau der LEDs, keine Bearbeitung der Konfiguration von
+  Hyperion (LED-Anordnung, Aufnahme-Einstellungen): Nutze dafür die
+  Weboberfläche von Hyperion.
+
+## Danksagung
+
+Die JSON-API von Hyperion.ng (MIT) und die Bibliothek
+[hyperion-py](https://github.com/dermotduffy/hyperion-py) von Dermot Duffy
+(MIT), die die Home-Assistant-Integration nutzt: Deren Tests lieferten die
+echten Serverantworten, die die Tests dieser Integration verwenden. Diese
+Integration steht in keiner Verbindung zum Hyperion-Projekt. Hyperion ist
+eine Marke ihrer Inhaber.

@@ -1,41 +1,41 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
+// Scene action handlers (manifest `scene_actions`, Gladys 5.1+).
 //
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
-//
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
-//
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// On, brightness and colour are already Gladys scene actions on the light
+// features. These three reach what only Hyperion does: an effect or a colour
+// for a given time (the server removes it by itself, and the picture comes
+// back), and the return to the Ambilight, whatever another application set.
+// No scene trigger is fired as a consequence of these actions.
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
-
-const logger = createLogger({ name: 'scenes' });
+import { parseColor } from './hyperion/model.js';
+import { userError } from './i18n.js';
 
 export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
+  async start_effect(hub, { fields }) {
+    const custom = typeof fields.custom_effect === 'string' ? fields.custom_effect.trim() : '';
+    const effect = custom || (typeof fields.effect === 'string' ? fields.effect.trim() : '');
+    if (!effect) {
+      throw userError(hub.config.language, 'noEffect');
+    }
+    const name = await hub.startEffect(fields.device, {
+      effect,
+      durationMinutes: fields.duration,
+    });
+    return { effect_name: name };
+  },
+
+  async show_color(hub, { fields }) {
+    const rgb = parseColor(fields.color);
+    if (!rgb) {
+      throw userError(hub.config.language, 'badColor', String(fields.color ?? '').slice(0, 40));
+    }
+    const color = await hub.showColorFor(fields.device, { rgb, durationMinutes: fields.duration });
+    return { color };
+  },
+
+  async restore_ambilight(hub, { fields }) {
+    await hub.backToAmbilight(fields.device);
+    return undefined;
   },
 };

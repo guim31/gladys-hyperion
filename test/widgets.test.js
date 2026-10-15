@@ -1,77 +1,136 @@
+// -----------------------------------------------------------------------------
+// The dashboard widget: content valid for the core (vocabulary and budget),
+// live tile bound to a feature that exists, buttons that do what they say.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { createFakeHyperion } from './helpers/fakeHyperion.js';
+import { createAll, createWorld, instanceId, settle } from './helpers/world.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
-
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
-
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
-
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
-    assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
-    );
-  } finally {
-    simulateLanSession(true);
+async function setup(t, { create = true } = {}) {
+  const server = await createFakeHyperion();
+  const world = await createWorld({ servers: [server] });
+  t.after(async () => {
+    await world.app.stop();
+    await server.stop().catch(() => {});
+  });
+  if (create) {
+    await createAll(world);
   }
-});
+  return { server, world, gladys: world.gladys };
+}
 
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+const content = async (gladys, settings, language = 'en') => {
+  const ack = await gladys.fake.widgetGet('hyperion', { settings, language, units: 'metric' });
+  assert.equal(ack.success, true, ack.error);
+  return ack.data.content;
+};
+
+const buttons = (widget) => widget.components.filter((component) => component.type === 'button');
+
+test('the widget shows the instance and offers its buttons', async (t) => {
+  const { gladys, server } = await setup(t);
+  const device = instanceId(gladys, server, 1);
+  const widget = await content(gladys, { device, effects: ['Candle', 'Fire', 'Sparks'] });
+  assert.deepEqual(validateWidgetContent(widget), []);
+  assert.equal(widget.components[0].text, 'Desk');
+
+  // The live tile is bound to a feature the device really has.
+  const tile = widget.components.find((component) => component.type === 'value');
+  const features = gladys.fake.discoveredDevices
+    .find((entry) => entry.external_id === device)
+    .features.map((feature) => feature.external_id);
+  assert.ok(features.includes(tile.device_feature));
+
+  const status = widget.components.find((component) => component.type === 'status');
+  assert.deepEqual(status.items, [
+    { label: 'Showing', value: 'Ambilight (USB capture)', color: 'success' },
+  ]);
+  assert.deepEqual(
+    buttons(widget).map((button) => [button.label, button.icon, button.action.key]),
+    [
+      ['Ambilight', 'check-circle', 'ambilight'],
+      ['Candle', 'play', 'effect_1'],
+      ['Fire', 'play', 'effect_2'],
+      ['Turn off', 'power', 'power'],
+    ],
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
-  }
+  // Never the `primary` style: invisible in dark mode (Gladys#3153).
+  assert.ok(buttons(widget).every((button) => button.style !== 'primary'));
 });
 
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
-  }
-});
+test('the buttons start an effect, go back to the Ambilight, turn off and on', async (t) => {
+  const { gladys, server } = await setup(t);
+  const device = instanceId(gladys, server, 0);
+  const settings = { device, effects: ['Candle'] };
+  const tap = (actionKey, params) =>
+    gladys.fake.widgetAction('hyperion', actionKey, params, { settings });
 
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
+  assert.deepEqual(await tap('effect_1', { effect: 'Candle' }), { success: true });
+  let widget = await content(gladys, settings, 'fr');
+  assert.deepEqual(validateWidgetContent(widget), []);
+  assert.equal(widget.components.find((c) => c.type === 'status').items[0].value, 'Effet : Candle');
+  assert.deepEqual(
+    buttons(widget).map((button) => [button.label, button.icon]),
+    [
+      ['Ambilight', 'tv'],
+      ['Candle', 'check-circle'],
+      ['Éteindre', 'power'],
+    ],
   );
+
+  await tap('ambilight', {});
+  widget = await content(gladys, settings);
+  assert.equal(buttons(widget)[0].icon, 'check-circle');
+
+  await tap('power', { on: false });
+  widget = await content(gladys, settings, 'de');
+  assert.deepEqual(widget.components.find((c) => c.type === 'status').items[0], {
+    label: 'Anzeige',
+    value: 'Aus',
+    color: 'neutral',
+  });
+  assert.equal(buttons(widget).at(-1).label, 'Einschalten');
+  await tap('power', { on: true });
+  widget = await content(gladys, settings, 'es');
+  assert.equal(buttons(widget).at(-1).label, 'Apagar');
 });
 
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+test('without a setting, the widget follows the first device added', async (t) => {
+  const { gladys } = await setup(t);
+  const widget = await content(gladys, {});
+  assert.equal(widget.components[0].text, 'TV');
+  assert.equal(buttons(widget).length, 2, 'Ambilight and power, no effect chosen');
+});
+
+test('nothing added yet, or the server gone: the widget says so', async (t) => {
+  const { gladys, server, world } = await setup(t, { create: false });
+  let widget = await content(gladys, {});
+  assert.deepEqual(validateWidgetContent(widget), []);
+  assert.match(widget.components[0].text, /^Choose a Hyperion device/);
+
+  await createAll(world);
+  await server.stop();
+  await settle(50);
+  widget = await content(gladys, {}, 'fr');
+  assert.deepEqual(validateWidgetContent(widget), []);
+  assert.deepEqual(widget.components.find((c) => c.type === 'status').items[0], {
+    label: 'Affichage',
+    value: 'Le serveur Hyperion ne répond pas.',
+    color: 'danger',
+  });
+  assert.equal(buttons(widget).length, 0);
+});
+
+test('the widget is refreshed when what the light shows changes', async (t) => {
+  const { gladys, server, world } = await setup(t);
+  const before = gladys.fake.widgetRefreshes.length;
+  world.hub.lastWidgetRefreshAt = -Infinity;
+  await gladys.fake.sceneAction('show_color', {
+    device: instanceId(gladys, server, 0),
+    color: '#123456',
+  });
+  assert.ok(gladys.fake.widgetRefreshes.length > before);
 });

@@ -1,0 +1,24 @@
+{
+  "command": "sysinfo",
+  "info": {
+    "hyperion": {
+      "build": "fix-request-tan (GitHub-78458e44/5d5b2497-1601058791)",
+      "gitremote": "https://github.com/hyperion-project/hyperion.ng.git",
+      "id": "4f2a9c1e-0b7d-5e3a-9c61-2d8e7f1a0b35",
+      "time": "Sep 29 2020 12:33:00",
+      "version": "2.0.0-alpha.8"
+    },
+    "system": {
+      "architecture": "arm",
+      "domainName": "domain",
+      "hostName": "hyperion",
+      "kernelType": "linux",
+      "kernelVersion": "5.4.51-v7l+",
+      "prettyName": "Raspbian GNU/Linux 10 (buster)",
+      "productType": "raspbian",
+      "productVersion": "10",
+      "wordSize": "32"
+    }
+  },
+  "success": true
+}
