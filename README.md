@@ -1,15 +1,17 @@
-# Hyperion for Gladys Assistant
+# Hyperion / HyperHDR for Gladys Assistant
 
 An external integration for [Gladys Assistant](https://gladysassistant.com)
-that controls [Hyperion.ng](https://hyperion-project.org) servers — the
+that controls [Hyperion.ng](https://hyperion-project.org) and
+[HyperHDR](https://github.com/awawa-dev/HyperHDR) servers — the
 ambient lighting ("Ambilight") behind a TV, driven by a Raspberry Pi — over
 their local JSON API.
 
-> **Developed without the hardware: feedback welcome.** Everything was built
-> and tested against the Hyperion JSON API documentation, the Hyperion.ng
-> source code and the real server replies published by `hyperion-py`, through
-> a simulated server. Nothing has run against a real Hyperion yet. Please
-> report what works and what does not.
+> **Tested against real servers, without LEDs: feedback welcome.** The
+> integration ran against a real Hyperion.ng 2.2.1 and a real HyperHDR 22.0.0
+> (official packages in Docker, two instances each, virtual LED output):
+> discovery by address, token login and token request, every feature, scene
+> actions, instances started from Gladys. No real LED strip nor video capture
+> was used. Please report what works and what does not.
 
 User documentation: [English](docs/en.md) · [Français](docs/fr.md) ·
 [Deutsch](docs/de.md) · [Español](docs/es.md).
@@ -18,7 +20,8 @@ User documentation: [English](docs/en.md) · [Français](docs/fr.md) ·
 
 - **Discovery**: Hyperion servers are found through Gladys' mediated SSDP
   (`urn:hyperion-project.org:device:basic:1`) and mDNS
-  (`_hyperiond-json._tcp`) discovery, or by IP address. A server is followed by
+  (`_hyperiond-json._tcp`, HyperHDR: `_hyperhdr-http._tcp`) discovery, or by
+  IP address. A server is followed by
   its Hyperion id, so a new IP address keeps the devices.
 - **One device per Hyperion instance**, with:
   - light on/off (the instance's `ALL` component; a stopped instance is
@@ -46,9 +49,8 @@ User documentation: [English](docs/en.md) · [Français](docs/fr.md) ·
 ## Requirements
 
 - Gladys Assistant 5.1.0 or later.
-- Hyperion.ng 2.0 or later, JSON server enabled (port 19444 by default), on
-  the same local network as Gladys. HyperHDR (same JSON API) should work by IP
-  address, untested.
+- Hyperion.ng 2.0 or later, or HyperHDR (tested with 22.0.0), JSON server
+  enabled (port 19444 by default), on the same local network as Gladys.
 
 ## Installation
 
@@ -80,8 +82,10 @@ settings, the token and the troubleshooting.
 
 ## Limitations
 
-- Developed and tested without a real Hyperion (see above).
-- Hyperion.ng 2.0+ only; HyperHDR untested.
+- Tested without a real LED strip nor video capture (see above).
+- Hyperion.ng 2.0+ or HyperHDR. HyperHDR is found by mDNS only (the core
+  searches the first SSDP target of the manifest, Hyperion's), on the default
+  JSON port; 14 effects of the static lists do not exist in HyperHDR.
 - The effect lists of the scene action and of the widget settings are the
   effects Hyperion ships with: a custom effect is named in a free text field.
 - Turning the Ambilight on clears the colours and effects of every API client,
@@ -155,12 +159,19 @@ the `docker_image` tag) must be bumped and committed before tagging. See
   component switches, the light as a priority.
 - [Hyperion.ng](https://github.com/hyperion-project/hyperion.ng) (MIT): the
   JSON-RPC schemas, the authorization rules and the SSDP/mDNS announcements,
-  read in its source code.
+  read in its source code; its official 2.2.1 package for the real tests.
+- [HyperHDR](https://github.com/awawa-dev/HyperHDR) by awawa-dev (MIT): its
+  JSON-RPC schemas and announcements, read in its source code, and its official
+  22.0.0 package for the real tests. The fixtures recorded on both servers are
+  in `test/fixtures/hyperion/`.
+- Cover: the official Hyperion logo and the official HyperHDR logo
+  (`www/img/hyperhdr/hyperhdrlogo.png` of the HyperHDR repository, MIT).
 
 ## Disclaimer
 
-This project is not affiliated with, endorsed or sponsored by the Hyperion
-project. "Hyperion" is the name of its owners' project.
+This project is not affiliated with, endorsed or sponsored by the Hyperion or
+HyperHDR projects. "Hyperion" and "HyperHDR" are the names of their owners'
+projects.
 
 ## License
 

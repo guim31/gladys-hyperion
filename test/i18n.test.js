@@ -242,12 +242,24 @@ test('the four documentations have the same sections', () => {
   }
 });
 
-test('the documentation says it was developed without the hardware, and is not affiliated', () => {
+test('the documentation says how it was tested (no LEDs), and is not affiliated', () => {
   const said = {
-    en: [/Developed without the hardware/, /not affiliated with the Hyperion project/],
-    fr: [/Développée sans le matériel/, /n'est pas affiliée au projet Hyperion/],
-    de: [/Ohne die Hardware entwickelt/, /steht in keiner Verbindung zum Hyperion-Projekt/],
-    es: [/Desarrollada sin el hardware/, /no está afiliada al proyecto Hyperion/],
+    en: [
+      /Tested against real servers, without LEDs: feedback welcome/,
+      /not affiliated with the Hyperion or HyperHDR projects/,
+    ],
+    fr: [
+      /Testée sur de vrais serveurs, sans LED : vos retours sont les\s+> bienvenus/,
+      /n'est affiliée ni au projet Hyperion ni au projet HyperHDR/,
+    ],
+    de: [
+      /Mit echten Servern getestet, ohne LEDs: Rückmeldungen sind\s+> willkommen/,
+      /steht in keiner Verbindung zu den Projekten Hyperion und\s+HyperHDR/,
+    ],
+    es: [
+      /Probada con servidores reales, sin LED: sus comentarios son\s+> bienvenidos/,
+      /no está afiliada a los proyectos Hyperion ni HyperHDR/,
+    ],
   };
   for (const lang of LANGS) {
     for (const pattern of said[lang]) {

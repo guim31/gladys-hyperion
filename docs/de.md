@@ -1,18 +1,22 @@
-# Hyperion
+# Hyperion / HyperHDR
 
-Steuere deine [Hyperion.ng](https://hyperion-project.org)-Ambientebeleuchtung
-mit Gladys: den LED-Streifen hinter dem Fernseher, gesteuert von einem
+Steuere deine Ambientebeleuchtung mit
+[Hyperion.ng](https://hyperion-project.org) oder
+[HyperHDR](https://github.com/awawa-dev/HyperHDR)
+über Gladys: den LED-Streifen hinter dem Fernseher, gesteuert von einem
 Raspberry Pi (oder einem anderen Rechner mit Hyperion), der die Farben des
 Bildes übernimmt — der „Ambilight“-Effekt.
 
-> **Ohne die Hardware entwickelt: Rückmeldungen sind willkommen.** Diese
-> Integration wurde anhand der Dokumentation der JSON-API von Hyperion, des
-> Codes von Hyperion.ng und der echten Serverantworten aus der Bibliothek
-> `hyperion-py` geschrieben und getestet, nicht mit einem echten
-> Hyperion-Server. Sag uns im Gladys-Forum oder in den GitHub-Issues, was
-> funktioniert und was nicht.
+> **Mit echten Servern getestet, ohne LEDs: Rückmeldungen sind
+> willkommen.** Diese Integration wurde mit einem echten Hyperion.ng 2.2.1 und
+> einem echten HyperHDR 22.0.0 getestet, jeweils mit zwei Instanzen und einem
+> virtuellen LED-Ausgang: Erkennung per Adresse, Token, alle Funktionen,
+> Szenenaktionen. Mit einem echten LED-Streifen oder einer echten
+> Videoaufnahme lief sie noch nicht (der Ambilight-Zustand wurde mit
+> Aufnahmen ohne Signal geprüft). Sag uns im Gladys-Forum oder in den
+> GitHub-Issues, was funktioniert und was nicht.
 >
-> Diese Integration steht in keiner Verbindung zum Hyperion-Projekt.
+> Diese Integration steht in keiner Verbindung zu den Projekten Hyperion und HyperHDR.
 
 ## Was du bekommst
 
@@ -47,8 +51,9 @@ einer Sekunde: Hyperion sendet sie.
   Netzwerk wie Gladys, mit aktiviertem **JSON-Server** (standardmäßig aktiv,
   auf Port 19444). Das alte „klassische“ Hyperion (vor 2.0) wird nicht
   unterstützt.
-- **HyperHDR** spricht dieselbe JSON-API und sollte ebenfalls funktionieren,
-  wenn du seine Adresse von Hand eingibst (nicht getestet).
+- Oder ein **HyperHDR**-Server (getestet mit 22.0.0), der Hyperion-Ableger
+  mit HDR-Unterstützung: dieselbe JSON-API, derselbe Port 19444. Siehe
+  [HyperHDR](#hyperhdr).
 - Kein Konto, keine Cloud: Alles bleibt in deinem Netzwerk.
 
 ## Installation und Konfiguration
@@ -142,6 +147,27 @@ Schwarze-Balken-Erkennung. Diese Schalter tun genau das, was die Schalter der
 Weboberfläche von Hyperion tun. Die Netzwerk-Komponenten (Forwarder,
 Boblight-Server) werden nicht angeboten.
 
+### HyperHDR
+
+HyperHDR wird wie Hyperion.ng behandelt, mit diesen Unterschieden, die an
+einem echten HyperHDR 22 festgestellt wurden:
+
+- **Erkennung**: Gladys findet ihn per mDNS (den Dienst seiner
+  Weboberfläche) und verbindet sich mit seiner JSON-API auf dem Standardport 19444. Hast du diesen Port geändert oder wird er nicht gefunden, gib
+  `Adresse:Port` in der Konfiguration ein.
+- **Komponenten**: Bildschirmaufnahme, USB-Aufnahme, HDR-Tone-Mapping,
+  Glättung, Schwarze-Balken-Erkennung. Es gibt keinen Schalter für den
+  LED-Ausgang: HyperHDR schaltet seinen LED-Ausgang selbst aus, wenn nichts
+  mehr anzuzeigen ist, und mit der nächsten Farbe, dem nächsten Effekt oder
+  der nächsten Aufnahme wieder ein. Das **Licht** ist sein Hauptschalter.
+- **Helligkeit** ist die Einstellung „Brightness/luminance“ von HyperHDR
+  (Luminanzverstärkung): 100 % entspricht einer Verstärkung von 1, eine
+  höhere in HyperHDR eingestellte Verstärkung wird als 100 % angezeigt und
+  bleibt erhalten, bis du eine niedrigere Helligkeit wählst.
+- **Effekte**: HyperHDR hat eine eigene Liste (Musikeffekte, „Rainbow
+  waves“), und einige Effekte von Hyperion fehlen; das Gerät listet die
+  Effekte deines Servers.
+
 ## Widget
 
 Füge das Widget **Hyperion** zu einem Dashboard hinzu. Es zeigt den Namen der
@@ -227,9 +253,13 @@ Aktuelle Anzeige…).
 
 ## Grenzen
 
-- **Ohne die Hardware entwickelt**: nur mit einem simulierten Server getestet
-  (siehe oben auf dieser Seite).
-- Nur Hyperion.ng 2.0 oder neuer; HyperHDR nicht getestet.
+- **Ohne LEDs getestet**: mit echten Hyperion.ng- und HyperHDR-Servern und
+  einem virtuellen LED-Ausgang, ohne echten LED-Streifen und ohne
+  Videoaufnahme (siehe oben auf dieser Seite).
+- Hyperion.ng 2.0 oder neuer, oder HyperHDR (getestet mit 22.0.0).
+- 14 Effekte der Listen der Szene und des Widgets gibt es in HyperHDR nicht
+  (Fire, Snake, X-Mas…): Wählst du einen davon, erscheint eine Fehlermeldung.
+  Seine Musikeffekte gibst du mit ihrem Namen ein.
 - Der Ambilight-Schalter kennt die Bildschirm- und die USB-Aufnahme; die
   Audioaufnahme (Hyperion 2.1) ist ein eigener Schalter.
 - Die Effektlisten der Szenenaktion und der Widget-Einstellungen sind die mit
@@ -249,5 +279,5 @@ Die JSON-API von Hyperion.ng (MIT) und die Bibliothek
 [hyperion-py](https://github.com/dermotduffy/hyperion-py) von Dermot Duffy
 (MIT), die die Home-Assistant-Integration nutzt: Deren Tests lieferten die
 echten Serverantworten, die die Tests dieser Integration verwenden. Diese
-Integration steht in keiner Verbindung zum Hyperion-Projekt. Hyperion ist
-eine Marke ihrer Inhaber.
+Integration steht in keiner Verbindung zu den Projekten Hyperion und HyperHDR. Hyperion ist
+eine Marke ihrer Inhaber. HyperHDR von awawa-dev (MIT): Sein Quellcode und seine Pakete dienten zum Testen dieser Integration.

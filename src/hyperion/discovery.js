@@ -7,6 +7,13 @@
 // with its id in USN (`uuid:<id>`, the same id as `sysinfo`) and, since 2.0,
 // with `HYPERION-NAME` and `HYPERION-JSS-PORT` headers (the JSON API port).
 // It publishes `_hyperiond-json._tcp` in mDNS with `id` and `version` in TXT.
+//
+// HyperHDR (same JSON API) answers only its own SSDP target
+// (`urn:hyperhdr.eu:device:basic:1`, headers `HYPERHDR-*`), and the core
+// searches the first SSDP target of the manifest only. Its mDNS service is
+// `_hyperhdr-http._tcp`: the port of its web interface, `version` alone in
+// TXT. A HyperHDR found that way is tried on the default JSON port, and
+// identified by its sysinfo. (HyperHDR 22 sources, sources/ssdp, sources/bonjour.)
 // -----------------------------------------------------------------------------
 
 import { parseMdnsTxt } from '@gladysassistant/integration-sdk';
@@ -14,6 +21,7 @@ import { DEFAULT_PORT } from './client.js';
 
 export const SSDP_ST = 'urn:hyperion-project.org:device:basic:1';
 export const MDNS_SERVICE = '_hyperiond-json._tcp';
+export const MDNS_SERVICE_HYPERHDR = '_hyperhdr-http._tcp';
 
 const IPV4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
@@ -54,6 +62,7 @@ export function ssdpCandidates(results) {
     const server = headers.server ?? '';
     const isHyperion =
       'hyperion-jss-port' in headers ||
+      'hyperhdr-jss-port' in headers ||
       String(headers.st ?? '').startsWith('urn:hyperion-project.org:') ||
       /hyperion/i.test(server);
     if (!isHyperion) {
@@ -74,8 +83,8 @@ export function ssdpCandidates(results) {
     candidates.push({
       id,
       host,
-      port: validPort(headers['hyperion-jss-port']) ?? DEFAULT_PORT,
-      name: headers['hyperion-name'] || null,
+      port: validPort(headers['hyperion-jss-port'] ?? headers['hyperhdr-jss-port']) ?? DEFAULT_PORT,
+      name: headers['hyperion-name'] || headers['hyperhdr-name'] || null,
       version: server.match(/Hyperion\/([^\s]+)/i)?.[1] ?? null,
       via: 'ssdp',
     });
@@ -84,13 +93,16 @@ export function ssdpCandidates(results) {
 }
 
 /**
- * One candidate server per `_hyperiond-json._tcp` service.
+ * One candidate server per `_hyperiond-json._tcp` (Hyperion.ng) or
+ * `_hyperhdr-http._tcp` (HyperHDR) service.
  * @param {Array<{ name: string, addresses: string[], port: number, txt: string[] }>} results
  */
 export function mdnsCandidates(results) {
   const candidates = [];
   for (const result of Array.isArray(results) ? results : []) {
-    if (!String(result?.name ?? '').includes('_hyperiond-json')) {
+    const name = String(result?.name ?? '');
+    const hyperhdr = name.includes('_hyperhdr-http');
+    if (!hyperhdr && !name.includes('_hyperiond-json')) {
       continue;
     }
     const host = (Array.isArray(result.addresses) ? result.addresses : []).find(isIpv4);
@@ -101,7 +113,8 @@ export function mdnsCandidates(results) {
     candidates.push({
       id: typeof txt.id === 'string' && txt.id ? txt.id.toLowerCase() : null,
       host,
-      port: validPort(result.port) ?? DEFAULT_PORT,
+      // HyperHDR announces its web port: its JSON API is on the default one.
+      port: hyperhdr ? DEFAULT_PORT : (validPort(result.port) ?? DEFAULT_PORT),
       name: null,
       version: typeof txt.version === 'string' ? txt.version : null,
       via: 'mdns',

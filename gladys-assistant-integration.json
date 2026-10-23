@@ -1,12 +1,12 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Hyperion",
+  "name": "Hyperion / HyperHDR",
   "description": {
-    "en": "Hyperion.ng ambient TV lighting: on/off, color, effects, Ambilight capture and components.",
-    "fr": "Éclairage d'ambiance TV Hyperion.ng : marche, couleur, effets, capture Ambilight, composants.",
-    "de": "Hyperion.ng-TV-Ambientebeleuchtung: an/aus, Farbe, Effekte, Ambilight-Aufnahme, Komponenten.",
-    "es": "Iluminación ambiental de TV Hyperion.ng: encendido, color, efectos, captura Ambilight."
+    "en": "Hyperion.ng and HyperHDR TV ambient lighting: on/off, color, effects, Ambilight, components.",
+    "fr": "Éclairage d'ambiance TV Hyperion.ng et HyperHDR : marche, couleur, effets, Ambilight, composants.",
+    "de": "TV-Ambientebeleuchtung mit Hyperion.ng und HyperHDR: an/aus, Farbe, Effekte, Ambilight.",
+    "es": "Iluminación ambiental de TV Hyperion.ng y HyperHDR: encendido, color, efectos, Ambilight."
   },
   "version": "1.0.1",
   "docker_image": "ghcr.io/guim31/gladys-hyperion:1.0.1",
@@ -22,6 +22,10 @@
     {
       "type": "mdns",
       "service": "_hyperiond-json._tcp"
+    },
+    {
+      "type": "mdns",
+      "service": "_hyperhdr-http._tcp"
     }
   ],
   "config_schema": [
@@ -29,16 +33,16 @@
       "key": "intro",
       "type": "section",
       "label": {
-        "en": "Finding your Hyperion",
-        "fr": "Trouver votre Hyperion",
-        "de": "Dein Hyperion finden",
-        "es": "Encontrar su Hyperion"
+        "en": "Finding your Hyperion or HyperHDR",
+        "fr": "Trouver votre Hyperion ou HyperHDR",
+        "de": "Dein Hyperion oder HyperHDR finden",
+        "es": "Encontrar su Hyperion o HyperHDR"
       },
       "description": {
-        "en": "Hyperion.ng servers on the same network as Gladys are found automatically: open the Discovery tab. If yours is missing, enter its IP address below. If Hyperion asks for a token (Local API Authentication), use the \"Request a token\" button below, then accept the request in the Hyperion web interface.",
-        "fr": "Les serveurs Hyperion.ng du même réseau que Gladys sont trouvés automatiquement : ouvrez l'onglet Découverte. S'il manque le vôtre, saisissez son adresse IP ci-dessous. Si Hyperion demande un jeton (authentification de l'API locale), utilisez le bouton « Demander un jeton » ci-dessous, puis acceptez la demande dans l'interface web d'Hyperion.",
-        "de": "Hyperion.ng-Server im selben Netzwerk wie Gladys werden automatisch gefunden: Öffne den Tab „Entdecken“. Fehlt deiner, gib unten seine IP-Adresse ein. Verlangt Hyperion ein Token (Authentifizierung der lokalen API), nutze unten die Schaltfläche „Token anfordern“ und nimm die Anfrage dann in der Weboberfläche von Hyperion an.",
-        "es": "Los servidores Hyperion.ng de la misma red que Gladys se encuentran automáticamente: abra la pestaña Descubrir. Si falta el suyo, introduzca su dirección IP a continuación. Si Hyperion pide un token (autenticación de la API local), use el botón «Solicitar un token» de abajo y acepte la solicitud en la interfaz web de Hyperion."
+        "en": "Hyperion.ng and HyperHDR servers on the same network as Gladys are found automatically: open the Discovery tab. If yours is missing, enter its IP address below. If Hyperion asks for a token (Local API Authentication), use the \"Request a token\" button below, then accept the request in the Hyperion web interface.",
+        "fr": "Les serveurs Hyperion.ng et HyperHDR du même réseau que Gladys sont trouvés automatiquement : ouvrez l'onglet Découverte. S'il manque le vôtre, saisissez son adresse IP ci-dessous. Si Hyperion demande un jeton (authentification de l'API locale), utilisez le bouton « Demander un jeton » ci-dessous, puis acceptez la demande dans l'interface web d'Hyperion.",
+        "de": "Hyperion.ng- und HyperHDR-Server im selben Netzwerk wie Gladys werden automatisch gefunden: Öffne den Tab „Entdecken“. Fehlt deiner, gib unten seine IP-Adresse ein. Verlangt Hyperion ein Token (Authentifizierung der lokalen API), nutze unten die Schaltfläche „Token anfordern“ und nimm die Anfrage dann in der Weboberfläche von Hyperion an.",
+        "es": "Los servidores Hyperion.ng y HyperHDR de la misma red que Gladys se encuentran automáticamente: abra la pestaña Descubrir. Si falta el suyo, introduzca su dirección IP a continuación. Si Hyperion pide un token (autenticación de la API local), use el botón «Solicitar un token» de abajo y acepte la solicitud en la interfaz web de Hyperion."
       },
       "links": [
         {
@@ -476,6 +480,15 @@
                 "fr": "Rainbow swirl fast",
                 "de": "Rainbow swirl fast",
                 "es": "Rainbow swirl fast"
+              }
+            },
+            {
+              "value": "Rainbow waves",
+              "label": {
+                "en": "Rainbow waves",
+                "fr": "Rainbow waves",
+                "de": "Rainbow waves",
+                "es": "Rainbow waves"
               }
             },
             {
@@ -1054,6 +1067,15 @@
                 "fr": "Rainbow swirl fast",
                 "de": "Rainbow swirl fast",
                 "es": "Rainbow swirl fast"
+              }
+            },
+            {
+              "value": "Rainbow waves",
+              "label": {
+                "en": "Rainbow waves",
+                "fr": "Rainbow waves",
+                "de": "Rainbow waves",
+                "es": "Rainbow waves"
               }
             },
             {

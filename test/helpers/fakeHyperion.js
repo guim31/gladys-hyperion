@@ -14,6 +14,13 @@
 // (change the state without pushing: a missed update), `pushes = false` (the
 // server stops pushing), `approveToken()` / `denyToken()`, `stop()` and
 // `restart()` (the server goes away and comes back on the same port).
+//
+// `product: 'HyperHDR'` plays a HyperHDR 22 instead, from the replies recorded
+// on a real one: `hyperhdr` in sysinfo, its components and adjustment (no
+// `brightness`, no `id`: other keys are refused, as its schema does), and its
+// LED device that follows the sources (off when none is left, on with the next
+// one). `staleSnapshots = true` makes the serverinfo that follows a switch of
+// ALL describe the state before LEDDEVICE followed, as a real HyperHDR did.
 // -----------------------------------------------------------------------------
 
 import { readFileSync } from 'node:fs';
@@ -25,13 +32,18 @@ const fixture = (name) =>
 export const SERVERINFO = fixture('serverinfo-2.0.0-alpha.8.json').info;
 export const SYSINFO = fixture('sysinfo-2.0.0-alpha.8.json').info;
 export const SERVER_ID = SYSINFO.hyperion.id;
+export const SERVERINFO_2_2_1 = fixture('serverinfo-2.2.1.json').info;
+export const HYPERHDR_SERVERINFO = fixture('serverinfo-hyperhdr-22.0.0.json').info;
+export const HYPERHDR_SYSINFO = fixture('sysinfo-hyperhdr-22.0.0.json').info;
+export const HYPERHDR_ID = HYPERHDR_SYSINFO.hyperhdr.id;
+const HYPERHDR_ADJUSTMENT_KEYS = new Set(Object.keys(HYPERHDR_SERVERINFO.adjustment[0]));
 export const VALID_TOKEN = 'a0b1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d';
 
 const clone = (value) => structuredClone(value);
 
 /** The state of one instance, from the fixture. */
-export function instanceInfo(overrides = {}) {
-  const info = clone(SERVERINFO);
+export function instanceInfo(overrides = {}, product = 'Hyperion') {
+  const info = clone(product === 'HyperHDR' ? HYPERHDR_SERVERINFO : SERVERINFO);
   delete info.instance; // the server-wide list is added on each reply
   return { ...info, ...overrides };
 }
@@ -45,8 +57,9 @@ export function instanceInfo(overrides = {}) {
  * @param {string[]} [options.tokens] the tokens login accepts
  */
 export async function createFakeHyperion({
-  id = SERVER_ID,
-  version = SYSINFO.hyperion.version,
+  product = 'Hyperion',
+  id = product === 'HyperHDR' ? HYPERHDR_ID : SERVER_ID,
+  version = product === 'HyperHDR' ? HYPERHDR_SYSINFO.hyperhdr.version : SYSINFO.hyperion.version,
   instances = [
     { instance: 0, name: 'TV', running: true },
     { instance: 1, name: 'Desk', running: true },
@@ -65,8 +78,11 @@ export async function createFakeHyperion({
       instance: entry.instance,
       name: entry.name,
       running: entry.running !== false,
-      info: entry.info ? clone(entry.info) : instanceInfo(),
+      info: entry.info ? clone(entry.info) : instanceInfo({}, product),
     })),
+    product,
+    staleSnapshots: false,
+    coalesce: false,
     requests: [],
     sessions: new Set(),
     tokenRequests: [],
@@ -82,10 +98,27 @@ export async function createFakeHyperion({
     }));
   const findInstance = (number) => fake.instances.find((entry) => entry.instance === number);
 
+  // `coalesce = true`: a reply and the pushes it causes leave in one TCP
+  // write, so the client emits the pushes before the reply resolves.
   const send = (session, message) => {
-    if (!session.socket.destroyed) {
-      session.socket.write(`${JSON.stringify(message)}\n`);
+    if (session.socket.destroyed) {
+      return;
     }
+    if (!fake.coalesce) {
+      session.socket.write(`${JSON.stringify(message)}\n`);
+      return;
+    }
+    if (!session.out) {
+      session.out = '';
+      setImmediate(() => {
+        const out = session.out;
+        session.out = null;
+        if (!session.socket.destroyed) {
+          session.socket.write(out);
+        }
+      });
+    }
+    session.out += `${JSON.stringify(message)}\n`;
   };
 
   /** Push an update to every subscribed session of an instance (or all). */
@@ -110,6 +143,17 @@ export async function createFakeHyperion({
       entry.visible = entry === lowest;
     }
     info.priorities.sort((a, b) => a.priority - b.priority);
+  };
+
+  /** HyperHDR: the LED device follows the sources (pushed after the change). */
+  const followSources = (number, info) => {
+    const led = info.components.find((entry) => entry.name === 'LEDDEVICE');
+    const all = info.components.find((entry) => entry.name === 'ALL');
+    const wanted = all?.enabled === true && info.priorities.some((entry) => entry.active);
+    if (fake.product === 'HyperHDR' && led && led.enabled !== wanted) {
+      led.enabled = wanted;
+      push(number, 'components-update', { name: 'LEDDEVICE', enabled: wanted });
+    }
   };
 
   const pushPriorities = (number, info) =>
@@ -167,6 +211,14 @@ export async function createFakeHyperion({
     const current = findInstance(session.instance);
     switch (command) {
       case 'sysinfo':
+        if (fake.product === 'HyperHDR') {
+          return reply(session, request, {
+            info: {
+              ...clone(HYPERHDR_SYSINFO),
+              hyperhdr: { ...HYPERHDR_SYSINFO.hyperhdr, id: fake.id, version },
+            },
+          });
+        }
         return reply(session, request, {
           info: { ...clone(SYSINFO), hyperion: { ...SYSINFO.hyperion, id: fake.id, version } },
         });
@@ -196,8 +248,10 @@ export async function createFakeHyperion({
         if (Array.isArray(request.subscribe)) {
           session.subscribed = true;
         }
+        const snapshot = session.stale ?? current.info;
+        session.stale = null;
         return reply(session, request, {
-          info: { ...clone(current.info), instance: instanceList() },
+          info: { ...clone(snapshot), instance: instanceList() },
         });
       }
       case 'color': {
@@ -214,7 +268,8 @@ export async function createFakeHyperion({
         });
         recomputeVisible(info);
         reply(session, request);
-        return pushPriorities(session.instance, info);
+        pushPriorities(session.instance, info);
+        return followSources(session.instance, info);
       }
       case 'effect': {
         const info = current.info;
@@ -232,14 +287,16 @@ export async function createFakeHyperion({
         });
         recomputeVisible(info);
         reply(session, request);
-        return pushPriorities(session.instance, info);
+        pushPriorities(session.instance, info);
+        return followSources(session.instance, info);
       }
       case 'clear': {
         const info = current.info;
         info.priorities = info.priorities.filter((entry) => entry.priority !== request.priority);
         recomputeVisible(info);
         reply(session, request);
-        return pushPriorities(session.instance, info);
+        pushPriorities(session.instance, info);
+        return followSources(session.instance, info);
       }
       case 'componentstate': {
         const { component, state } = request.componentstate ?? {};
@@ -257,9 +314,22 @@ export async function createFakeHyperion({
         recomputeVisible(current.info);
         reply(session, request);
         pushPriorities(session.instance, current.info);
-        return push(session.instance, 'components-update', { name: component, enabled: state });
+        push(session.instance, 'components-update', { name: component, enabled: state });
+        if (component === 'ALL' && fake.product === 'HyperHDR') {
+          if (fake.staleSnapshots) {
+            session.stale = clone(current.info);
+          }
+          followSources(session.instance, current.info);
+        }
+        return undefined;
       }
       case 'adjustment': {
+        if (
+          fake.product === 'HyperHDR' &&
+          Object.keys(request.adjustment ?? {}).some((key) => !HYPERHDR_ADJUSTMENT_KEYS.has(key))
+        ) {
+          return error(session, request, 'Invalid params');
+        }
         const { id: adjustmentId, ...changes } = request.adjustment ?? {};
         for (const adjustment of current.info.adjustment) {
           if (!adjustmentId || adjustment.id === adjustmentId) {

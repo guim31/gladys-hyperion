@@ -17,6 +17,7 @@ import {
   availableComponents,
   effectNames,
   parseInstances,
+  serverIdentity,
   visiblePriority,
 } from '../src/hyperion/model.js';
 
@@ -54,7 +55,8 @@ try {
   );
 
   const sysinfo = await main.sysinfo();
-  console.log(`Hyperion ${sysinfo.hyperion?.version ?? '?'}, id ${sysinfo.hyperion?.id ?? '?'}`);
+  const identity = serverIdentity(sysinfo);
+  console.log(`${identity.product} ${identity.version ?? '?'}, id ${identity.id || '?'}`);
   console.log(
     `System: ${sysinfo.system?.prettyName ?? '?'} (${sysinfo.system?.architecture ?? '?'})`,
   );

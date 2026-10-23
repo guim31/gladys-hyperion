@@ -1,0 +1,754 @@
+{
+  "command": "serverinfo",
+  "info": {
+    "activeEffects": [],
+    "activeLedColor": [],
+    "adjustment": [
+      {
+        "backlightColored": false,
+        "backlightThreshold": 0,
+        "blue": [0, 0, 255],
+        "brightness": 100,
+        "brightnessCompensation": 100,
+        "brightnessGain": 1,
+        "cyan": [0, 255, 255],
+        "gammaBlue": 2.2,
+        "gammaGreen": 2.2,
+        "gammaRed": 2.2,
+        "green": [0, 255, 0],
+        "id": "default",
+        "magenta": [255, 0, 255],
+        "red": [255, 0, 0],
+        "saturationGain": 1,
+        "temperature": 6600,
+        "white": [255, 255, 255],
+        "yellow": [255, 255, 0]
+      }
+    ],
+    "cec": {
+      "enabled": true
+    },
+    "components": [
+      {
+        "enabled": true,
+        "name": "ALL"
+      },
+      {
+        "enabled": true,
+        "name": "SMOOTHING"
+      },
+      {
+        "enabled": true,
+        "name": "BLACKBORDER"
+      },
+      {
+        "enabled": false,
+        "name": "FORWARDER"
+      },
+      {
+        "enabled": false,
+        "name": "BOBLIGHTSERVER"
+      },
+      {
+        "enabled": false,
+        "name": "GRABBER"
+      },
+      {
+        "enabled": false,
+        "name": "V4L"
+      },
+      {
+        "enabled": false,
+        "name": "AUDIO"
+      },
+      {
+        "enabled": true,
+        "name": "LEDDEVICE"
+      }
+    ],
+    "effects": [
+      {
+        "args": {
+          "center_x": 0.5,
+          "center_y": 0.5,
+          "custom-colors": [
+            [0, 0, 0],
+            [0, 0, 0],
+            [255, 255, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [255, 255, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [255, 255, 0]
+          ],
+          "custom-colors2": [],
+          "enable-second": false,
+          "random-center": false,
+          "reverse": false,
+          "rotation-time": 25
+        },
+        "file": ":/effects/atomic.json",
+        "name": "Atomic swirl",
+        "script": ":/effects/swirl.py"
+      },
+      {
+        "args": {
+          "blobs": 5,
+          "color": [0, 0, 255],
+          "hueChange": 60,
+          "reverse": false,
+          "rotationTime": 60
+        },
+        "file": ":/effects/mood-blobs-blue.json",
+        "name": "Blue mood blobs",
+        "script": ":/effects/mood-blobs.py"
+      },
+      {
+        "args": {
+          "color-end": [255, 255, 255],
+          "color-end-time": 250,
+          "color-start": [50, 50, 50],
+          "color-start-time": 50,
+          "fade-in-time": 3000,
+          "fade-out-time": 1000,
+          "maintain-end-color": true,
+          "repeat-count": 0
+        },
+        "file": ":/effects/breath.json",
+        "name": "Breath",
+        "script": ":/effects/fade.py"
+      },
+      {
+        "args": {
+          "brightness": 100,
+          "candles": "all",
+          "color": [255, 138, 0],
+          "sleepTime": 0.2,
+          "smoothing-custom-settings": true,
+          "smoothing-time_ms": 500,
+          "smoothing-updateFrequency": 20
+        },
+        "file": ":/effects/candle.json",
+        "name": "Candle",
+        "script": ":/effects/candle.py"
+      },
+      {
+        "args": {
+          "color-end": [238, 173, 47],
+          "color-end-time": 0,
+          "color-start": [136, 97, 7],
+          "color-start-time": 0,
+          "fade-in-time": 5000,
+          "fade-out-time": 0,
+          "maintain-end-color": true,
+          "repeat-count": 1
+        },
+        "file": ":/effects/cinema-fade-in.json",
+        "name": "Cinema brighten lights",
+        "script": ":/effects/fade.py"
+      },
+      {
+        "args": {
+          "color-end": [238, 173, 47],
+          "color-end-time": 0,
+          "color-start": [136, 97, 7],
+          "color-start-time": 0,
+          "fade-in-time": 0,
+          "fade-out-time": 5000,
+          "maintain-end-color": true,
+          "repeat-count": 1
+        },
+        "file": ":/effects/cinema-fade-off.json",
+        "name": "Cinema dim lights",
+        "script": ":/effects/fade.py"
+      },
+      {
+        "args": {
+          "baseChange": true,
+          "baseColorChangeRate": 2,
+          "baseColorRangeLeft": 160,
+          "baseColorRangeRight": 320,
+          "blobs": 5,
+          "color": [0, 0, 255],
+          "hueChange": 30,
+          "reverse": false,
+          "rotationTime": 60
+        },
+        "file": ":/effects/mood-blobs-cold.json",
+        "name": "Cold mood blobs",
+        "script": ":/effects/mood-blobs.py"
+      },
+      {
+        "args": {
+          "explodeRadius": 8,
+          "speed": 100,
+          "trailLength": 5
+        },
+        "file": ":/effects/collision.json",
+        "name": "Collision",
+        "script": ":/effects/collision.py"
+      },
+      {
+        "args": {
+          "speed": 1
+        },
+        "file": ":/effects/traces.json",
+        "name": "Color traces",
+        "script": ":/effects/traces.py"
+      },
+      {
+        "args": {
+          "center_x": 0.5,
+          "center_x2": 0.5,
+          "center_y": 0.5,
+          "center_y2": 0.5,
+          "custom-colors": [
+            [255, 0, 0],
+            [20, 0, 255]
+          ],
+          "custom-colors2": [
+            [255, 0, 0, 0],
+            [255, 0, 0, 0],
+            [255, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0],
+            [255, 0, 0, 0],
+            [255, 0, 0, 0],
+            [0, 0, 0, 1]
+          ],
+          "enable-second": true,
+          "random-center": false,
+          "random-center2": false,
+          "reverse": false,
+          "reverse2": true,
+          "rotation-time": 25
+        },
+        "file": ":/effects/double-swirl.json",
+        "name": "Double swirl",
+        "script": ":/effects/swirl.py"
+      },
+      {
+        "args": {
+          "cropBottom": 0,
+          "cropLeft": 0,
+          "cropRight": 0,
+          "cropTop": 0,
+          "file": ":fire.gif",
+          "fps": 25,
+          "grayscale": false,
+          "imageSource": "file",
+          "reverse": false
+        },
+        "file": ":/effects/fire.json",
+        "name": "Fire",
+        "script": ":/effects/gif.py"
+      },
+      {
+        "args": {
+          "countries": ["de", "se"],
+          "switch-time": 2
+        },
+        "file": ":/effects/flag.json",
+        "name": "Flags Germany/Sweden",
+        "script": ":/effects/flag.py"
+      },
+      {
+        "args": {
+          "baseChange": true,
+          "baseColorChangeRate": 0.2,
+          "baseColorRangeLeft": 0,
+          "baseColorRangeRight": 360,
+          "blobs": 5,
+          "colorRandom": true,
+          "hueChange": 30,
+          "reverse": false,
+          "rotationTime": 60
+        },
+        "file": ":/effects/mood-blobs-full.json",
+        "name": "Full color mood blobs",
+        "script": ":/effects/mood-blobs.py"
+      },
+      {
+        "args": {
+          "blobs": 5,
+          "color": [0, 255, 0],
+          "hueChange": 60,
+          "reverse": false,
+          "rotationTime": 60
+        },
+        "file": ":/effects/mood-blobs-green.json",
+        "name": "Green mood blobs",
+        "script": ":/effects/mood-blobs.py"
+      },
+      {
+        "args": {
+          "color": [255, 0, 0],
+          "fadeFactor": 0.7,
+          "speed": 1
+        },
+        "file": ":/effects/knight-rider.json",
+        "name": "Knight rider",
+        "script": ":/effects/knight-rider.py"
+      },
+      {
+        "args": {
+          "sleepTime": 0.5,
+          "smoothing-custom-settings": false,
+          "smoothing-time_ms": 500,
+          "smoothing-updateFrequency": 20,
+          "testleds": "all"
+        },
+        "file": ":/effects/ledtest.json",
+        "name": "Led Test",
+        "script": ":/effects/ledtest.py"
+      },
+      {
+        "args": {
+          "sleepTime": 0.5,
+          "smoothing-custom-settings": false,
+          "smoothing-time_ms": 500,
+          "smoothing-updateFrequency": 20
+        },
+        "file": ":/effects/ledtest-seq.json",
+        "name": "Led Test - Sequence",
+        "script": ":/effects/ledtest-seq.py"
+      },
+      {
+        "args": {
+          "background-color": [0, 0, 0],
+          "hour-color": [0, 0, 255],
+          "marker-color": [255, 255, 255],
+          "marker-depth": 0,
+          "marker-enabled": false,
+          "marker-width": 5,
+          "minute-color": [0, 255, 0],
+          "second-color": [255, 0, 0],
+          "show_seconds": true
+        },
+        "file": ":/effects/light-clock.json",
+        "name": "Light clock",
+        "script": ":/effects/light-clock.py"
+      },
+      {
+        "args": {
+          "cropBottom": 0,
+          "cropLeft": 0,
+          "cropRight": 0,
+          "cropTop": 0,
+          "file": ":lights.gif",
+          "fps": 25,
+          "grayscale": false,
+          "imageSource": "file",
+          "reverse": false
+        },
+        "file": ":/effects/lights.json",
+        "name": "Lights",
+        "script": ":/effects/gif.py"
+      },
+      {
+        "args": {
+          "cropBottom": 0,
+          "cropLeft": 0,
+          "cropRight": 0,
+          "cropTop": 0,
+          "file": ":matrix.gif",
+          "fps": 30,
+          "grayscale": false,
+          "imageSource": "file",
+          "reverse": false
+        },
+        "file": ":/effects/matrix.json",
+        "name": "Matrix",
+        "script": ":/effects/gif.py"
+      },
+      {
+        "args": {
+          "color-end": [0, 0, 255],
+          "color-end-time": 150,
+          "color-start": [0, 0, 50],
+          "color-start-time": 40,
+          "fade-in-time": 200,
+          "fade-out-time": 100,
+          "maintain-end-color": false,
+          "repeat-count": 3
+        },
+        "file": ":/effects/notify-blue.json",
+        "name": "Notify blue",
+        "script": ":/effects/fade.py"
+      },
+      {
+        "args": {
+          "margin-pos": 2,
+          "rotationTime": 4
+        },
+        "file": ":/effects/pacman.json",
+        "name": "Pac-Man",
+        "script": ":/effects/pacman.py"
+      },
+      {
+        "args": {
+          "sleepTime": 0.2
+        },
+        "file": ":/effects/plasma.json",
+        "name": "Plasma",
+        "script": ":/effects/plasma.py"
+      },
+      {
+        "args": {
+          "color_one": [255, 0, 0],
+          "color_two": [0, 0, 255],
+          "colors_count": 10,
+          "reverse": false,
+          "rotation-time": 1.5
+        },
+        "file": ":/effects/police-lights-single.json",
+        "name": "Police Lights Single",
+        "script": ":/effects/police.py"
+      },
+      {
+        "args": {
+          "color_one": [255, 0, 0],
+          "color_two": [0, 0, 255],
+          "reverse": false,
+          "rotation-time": 1
+        },
+        "file": ":/effects/police-lights-solid.json",
+        "name": "Police Lights Solid",
+        "script": ":/effects/police.py"
+      },
+      {
+        "args": {
+          "brightness": 100,
+          "reverse": false,
+          "rotation-time": 60
+        },
+        "file": ":/effects/rainbow-mood.json",
+        "name": "Rainbow mood",
+        "script": ":/effects/rainbow-mood.py"
+      },
+      {
+        "args": {
+          "center_x": 0.5,
+          "center_y": 0.5,
+          "custom-colors": [],
+          "custom-colors2": [],
+          "enable-second": false,
+          "random-center": false,
+          "reverse": false,
+          "rotation-time": 20,
+          "smoothing-custom-settings": true,
+          "smoothing-time_ms": 200,
+          "smoothing-updateFrequency": 25
+        },
+        "file": ":/effects/rainbow-swirl.json",
+        "name": "Rainbow swirl",
+        "script": ":/effects/swirl.py"
+      },
+      {
+        "args": {
+          "center_x": 0.5,
+          "center_y": 0.5,
+          "custom-colors": [],
+          "custom-colors2": [],
+          "enable-second": false,
+          "random-center": false,
+          "reverse": false,
+          "rotation-time": 7
+        },
+        "file": ":/effects/rainbow-swirl-fast.json",
+        "name": "Rainbow swirl fast",
+        "script": ":/effects/swirl.py"
+      },
+      {
+        "args": {
+          "saturation": 1,
+          "smoothing-custom-settings": true,
+          "smoothing-time_ms": 200,
+          "smoothing-updateFrequency": 20,
+          "speed": 750
+        },
+        "file": ":/effects/random.json",
+        "name": "Random",
+        "script": ":/effects/random.py"
+      },
+      {
+        "args": {
+          "blobs": 5,
+          "color": [255, 0, 0],
+          "hueChange": 60,
+          "reverse": false,
+          "rotationTime": 60
+        },
+        "file": ":/effects/mood-blobs-red.json",
+        "name": "Red mood blobs",
+        "script": ":/effects/mood-blobs.py"
+      },
+      {
+        "args": {
+          "center_x": 1.25,
+          "center_y": -0.25,
+          "colors": [
+            [8, 0, 255],
+            [0, 161, 255],
+            [0, 222, 255],
+            [0, 153, 255],
+            [38, 0, 255],
+            [0, 199, 255]
+          ],
+          "random-center": false,
+          "reverse": false,
+          "reverse_time": 0,
+          "rotation_time": 60,
+          "smoothing-custom-settings": true,
+          "smoothing-time_ms": 200,
+          "smoothing-updateFrequency": 25
+        },
+        "file": ":/effects/Seawaves.json",
+        "name": "Sea waves",
+        "script": ":/effects/waves.py"
+      },
+      {
+        "args": {
+          "background-color": [0, 0, 0],
+          "color": [255, 0, 0],
+          "percentage": 10,
+          "rotation-time": 12
+        },
+        "file": ":/effects/snake.json",
+        "name": "Snake",
+        "script": ":/effects/snake.py"
+      },
+      {
+        "args": {
+          "brightness": 100,
+          "color": [255, 255, 255],
+          "random-color": false,
+          "rotation-time": 3,
+          "saturation": 100,
+          "sleep-time": 0.05
+        },
+        "file": ":/effects/sparks.json",
+        "name": "Sparks",
+        "script": ":/effects/sparks.py"
+      },
+      {
+        "args": {
+          "color-end": [0, 0, 0],
+          "color-end-time": 100,
+          "color-start": [255, 0, 0],
+          "color-start-time": 100,
+          "fade-in-time": 100,
+          "fade-out-time": 100,
+          "maintain-end-color": true,
+          "repeat-count": 0
+        },
+        "file": ":/effects/strobe-red.json",
+        "name": "Strobe red",
+        "script": ":/effects/fade.py"
+      },
+      {
+        "args": {
+          "color-end": [0, 0, 0],
+          "color-end-time": 10,
+          "color-start": [255, 255, 255],
+          "color-start-time": 50,
+          "fade-in-time": 0,
+          "fade-out-time": 100,
+          "maintain-end-color": true,
+          "repeat-count": 0
+        },
+        "file": ":/effects/strobe-white.json",
+        "name": "Strobe white",
+        "script": ":/effects/fade.py"
+      },
+      {
+        "args": {
+          "alarm-color": [255, 0, 0],
+          "initial-blink": true,
+          "post-color": [255, 174, 11],
+          "set-post-color": true,
+          "shutdown-enabled": false,
+          "speed": 1.2
+        },
+        "file": ":/effects/shutdown.json",
+        "name": "System Shutdown",
+        "script": ":/effects/shutdown.py"
+      },
+      {
+        "args": {
+          "color": [255, 255, 255],
+          "height": 8,
+          "max_len": 7,
+          "min_len": 2,
+          "random": false,
+          "speed": 30,
+          "trails": 3
+        },
+        "file": ":/effects/trails.json",
+        "name": "Trails",
+        "script": ":/effects/trails.py"
+      },
+      {
+        "args": {
+          "color": [255, 255, 255],
+          "height": 8,
+          "max_len": 6,
+          "min_len": 2,
+          "random": true,
+          "speed": 50,
+          "trails": 16
+        },
+        "file": ":/effects/trails_color.json",
+        "name": "Trails color",
+        "script": ":/effects/trails.py"
+      },
+      {
+        "args": {
+          "baseChange": true,
+          "baseColorChangeRate": 2,
+          "baseColorRangeLeft": 333,
+          "baseColorRangeRight": 151,
+          "blobs": 5,
+          "color": [255, 0, 0],
+          "hueChange": 30,
+          "reverse": false,
+          "rotationTime": 60,
+          "smoothing-custom-settings": true,
+          "smoothing-time_ms": 200,
+          "smoothing-updateFrequency": 25
+        },
+        "file": ":/effects/mood-blobs-warm.json",
+        "name": "Warm mood blobs",
+        "script": ":/effects/mood-blobs.py"
+      },
+      {
+        "args": {
+          "reverse": false
+        },
+        "file": ":/effects/waves.json",
+        "name": "Waves with Color",
+        "script": ":/effects/waves.py"
+      },
+      {
+        "args": {
+          "color1": [255, 255, 255],
+          "color2": [255, 0, 0],
+          "length": 1,
+          "sleepTime": 750
+        },
+        "file": ":/effects/x-mas.json",
+        "name": "X-Mas",
+        "script": ":/effects/x-mas.py"
+      }
+    ],
+    "grabbers": {
+      "audio": {
+        "active": [],
+        "available": ["audio"]
+      },
+      "screen": {
+        "active": [],
+        "available": ["framebuffer", "x11", "xcb", "qt", "drm"]
+      },
+      "video": {
+        "active": [],
+        "available": ["v4l2"]
+      }
+    },
+    "hostname": "hyperion-host",
+    "imageToLedMappingType": "multicolor_mean",
+    "instance": [
+      {
+        "friendly_name": "First LED Hardware instance",
+        "instance": 0,
+        "running": true
+      }
+    ],
+    "ledDevices": {
+      "available": [
+        "adalight",
+        "apa102",
+        "apa102_ftdi",
+        "apa104",
+        "atmo",
+        "atmoorb",
+        "cololight",
+        "dmx",
+        "fadecandy",
+        "file",
+        "hd108",
+        "homeassistant",
+        "hyperionusbasp",
+        "karate",
+        "lightpack",
+        "lpd6803",
+        "lpd8806",
+        "nanoleaf",
+        "p9813",
+        "paintpack",
+        "philipshue",
+        "piblaster",
+        "rawhid",
+        "razer",
+        "sedu",
+        "sk6812_ftdi",
+        "sk6812spi",
+        "sk6822spi",
+        "sk9822",
+        "skydimo",
+        "tinkerforge",
+        "tpm2",
+        "tpm2net",
+        "udpartnet",
+        "udpddp",
+        "udpe131",
+        "udph801",
+        "udpraw",
+        "wled",
+        "ws2801",
+        "ws2812_ftdi",
+        "ws2812spi",
+        "yeelight"
+      ]
+    },
+    "leds": [
+      {
+        "hmax": 1,
+        "hmin": 0,
+        "vmax": 0.08,
+        "vmin": 0
+      }
+    ],
+    "priorities": [],
+    "priorities_autoselect": true,
+    "services": [
+      "boblight",
+      "cec",
+      "effectengine",
+      "forwarder",
+      "flatbuffer",
+      "protobuffer",
+      "mDNS",
+      "SSDP",
+      "borderdetection"
+    ],
+    "transform": [
+      {
+        "blacklevel": [0, 0, 0],
+        "brightnessGain": 1,
+        "gamma": [2.5, 2.5, 2.5],
+        "id": "default",
+        "luminanceGain": 1,
+        "luminanceMinimum": 0,
+        "saturationGain": 1,
+        "saturationLGain": 1,
+        "threshold": [0, 0, 0],
+        "whitelevel": [1, 1, 1]
+      }
+    ],
+    "videomode": "2D"
+  },
+  "success": true,
+  "tan": 3
+}

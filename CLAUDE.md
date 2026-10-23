@@ -50,8 +50,8 @@ scripts/probe.mjs                 read-only check of a real server (sysinfo, ser
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
 docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
-test/helpers/fakeHyperion.js      a fake Hyperion server on loopback TCP, from the fixtures
-test/fixtures/hyperion/           real serverinfo/sysinfo replies (hyperion-py tests, MIT)
+test/helpers/fakeHyperion.js      a fake Hyperion (or HyperHDR: product option) on loopback TCP, from the fixtures
+test/fixtures/hyperion/           real serverinfo/sysinfo replies (hyperion-py tests; Hyperion.ng 2.2.1, HyperHDR 22.0.0)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -257,10 +257,11 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 
 # Hyperion : ce qu'il faut savoir (15/10/2026)
 
-Intégration écrite **sans le matériel** : rien n'a tourné contre un vrai Hyperion. Les faits
-ci-dessous viennent du code d'Hyperion.ng (MIT, `libsrc/api`, `libsrc/ssdp`, `libsrc/mdns`), de
-`hyperion-py` (MIT) et de l'intégration Home Assistant. `scripts/probe.mjs <ip>` (lecture seule) est
-à lancer sur un vrai serveur avant toute conclusion.
+Écrite d'abord sans le matériel (1.0.x), puis **testée le 23/10/2026 contre un vrai Hyperion.ng
+2.2.1 et un vrai HyperHDR 22.0.0** (voir « HyperHDR et tests réels » plus bas), sans ruban LED ni
+capture vidéo. Les faits ci-dessous viennent du code d'Hyperion.ng (MIT, `libsrc/api`,
+`libsrc/ssdp`, `libsrc/mdns`), de `hyperion-py` (MIT), de l'intégration Home Assistant, et de ces
+tests. `scripts/probe.mjs <ip>` (lecture seule) lit un vrai serveur.
 
 ## API JSON
 
@@ -294,7 +295,7 @@ ci-dessous viennent du code d'Hyperion.ng (MIT, `libsrc/api`, `libsrc/ssdp`, `li
 - mDNS : `_hyperiond-json._tcp`, TXT `id=<id>` et `version=`.
 - Le cœur ne scanne en SSDP que la **première** entrée `ssdp` du manifeste, et une seule analyse à
   la fois par intégration : SSDP puis mDNS, l'un après l'autre.
-- HyperHDR parle la même API mais s'annonce autrement : saisie manuelle (non testé).
+- HyperHDR s'annonce autrement (voir plus bas) : trouvé par mDNS seulement.
 
 ## Choix
 
@@ -321,3 +322,54 @@ ci-dessous viennent du code d'Hyperion.ng (MIT, `libsrc/api`, `libsrc/ssdp`, `li
   personne en début de phrase (après deux-points) : tourner la phrase autrement.
 - Le validateur du store refuse un `default` sur un champ `secret` (« not allowed for secret
   fields ») : le champ `token` n'en a pas, `DEFAULT_CONFIG.token` reste `''` côté code.
+
+# HyperHDR et tests réels (23/10/2026)
+
+Vérifié sur Hyperion.ng 2.2.1 et HyperHDR 22.0.0 (paquets `.deb` officiels des releases GitHub,
+installés dans `public.ecr.aws/docker/library/debian:bookworm-slim` ; Hyperion.ng y demande en plus
+`libexpat1`, le reste est embarqué). Les deux démarrent avec une sortie LED « file » vers
+`/dev/null`, l'API JSON sur 19444 sans jeton, et acceptent `instance createInstance` (nom de 5
+caractères au moins) après `authorize login` avec le mot de passe par défaut (`hyperion` /
+`hyperhdr`). « Local API Authentication » : `config setconfig` avec l'objet `network` complet
+(HyperHDR) ou `global.settings.network` (Hyperion.ng 2.2). Les sessions déjà ouvertes gardent
+leurs droits.
+
+- **`sysinfo`** : HyperHDR remplit `hyperhdr` (`id`, `version`) et pas `hyperion` (le bloc
+  `hyperhdr` l'emporte s'il y a les deux, pour garder l'id) : sans
+  `serverIdentity`, la 1.0.1 le refusait (« the server has no id »). Le produit est gardé dans le
+  serveur (`product`, sauvé dans `/data`) et donne le modèle (`HyperHDR 22.0.0`).
+- **Composants** : HyperHDR a `ALL`, `HDR`, `SMOOTHING`, `BLACKBORDER`, `FORWARDER`,
+  `VIDEOGRABBER` (USB), `SYSTEMGRABBER` (écran), `LEDDEVICE`. Les deux captures sont des
+  `CAPTURE_COMPONENTS`. Les clés `component-systemgrabber`, `component-videograbber`,
+  `component-hdr` sont **ajoutées en fin** de `SWITCHABLE_COMPONENTS` : un appareil Hyperion.ng ne
+  les a jamais, ses fonctionnalités et leur ordre ne changent pas.
+- **HyperHDR pilote `LEDDEVICE` lui-même** : coupé dès qu'il n'y a plus de source, rallumé à la
+  source suivante, même après une coupure par l'utilisateur. Donc sur HyperHDR (reconnu à son
+  composant `HDR` ou à `videomodehdr`) : allumé = `ALL` seul, pas d'interrupteur « Sortie LED »,
+  et `turnOn` n'envoie pas `LEDDEVICE`. Hyperion.ng 2.2.1, lui, garde `LEDDEVICE` tel quel.
+- **Luminosité** : l'`adjustment` d'HyperHDR n'a ni `brightness` ni `id` et refuse toute clé
+  inconnue (`additionalProperties: false`). Son interface appelle `luminanceGain` (0 à 10, 1 par
+  défaut) « Brightness/luminance » : lu 100 % à partir de 1, écrit `level / 100` (un gain > 1 est
+  gardé si l'on demande 100 %). Sans `adjustment` connu, le produit du serveur décide.
+- **Course `serverinfo`/push** : HyperHDR a répondu à un `serverinfo` envoyé juste après
+  `componentstate ALL` avec `LEDDEVICE` **plus ancien** que le `components-update` poussé avant la réponse. Sur HyperHDR seulement, `refreshLink` rejoue sur la réponse les `components-update`
+  reçus depuis 1 s avant la requête (`link.recentComponents`) : un push peut partager le segment
+  TCP de la réponse à la commande et arriver avant que la relecture commence. `openLink` garde
+  aussi les pushes émis avant la résolution du premier `serverinfo`. Le faux serveur simule les deux
+  (`staleSnapshots`, `coalesce`). Hyperion.ng garde sa réponse telle quelle.
+- **`startInstance`** d'une instance tout juste créée sur HyperHDR a dépassé 5 s (réponse au bout
+  d'environ 0,6 s ensuite) : délai de 20 s pour cette commande.
+- Une réponse d'erreur d'HyperHDR peut porter `command: "instance"` sans la sous-commande : la
+  correspondance se fait par `tan`, ce qui suffit.
+- **Durées** (`duration` des couleurs et effets) et `clear` : identiques sur les deux.
+- **Effets** : 14 effets de `BUILTIN_EFFECTS` n'existent pas dans HyperHDR 22 (Fire, Snake,
+  X-Mas…) ; il ajoute 28 effets « Music: … » (capture audio) et « Rainbow waves » (ajouté aux
+  listes). Hyperion.ng 2.2.1 ajoute « Matrix » et « Led Test - Sequence ».
+- **Découverte** : SSDP `urn:hyperhdr.eu:device:basic:1`, en-têtes `HYPERHDR-JSS-PORT` et
+  `HYPERHDR-NAME` ; le cœur ne cherche que la première cible SSDP du manifeste (celle d'Hyperion),
+  HyperHDR n'y répond pas. mDNS `_hyperhdr-http._tcp` (port de l'interface web, TXT `version`
+  seul) : le cœur parcourt **tous** les services mDNS déclarés (`runScan`, 5.2.0), donc HyperHDR est
+  essayé sur le port JSON par défaut 19444 et identifié par `sysinfo`. Non vérifié en vrai (pas de
+  Gladys ni de multicast dans le banc de test).
+- Jetons : `tokenRequired`, `login` avec un jeton, refus d'un jeton faux, et `requestToken` accepté
+  par une session admin (`authorize answerRequest`) marchent pareil sur les deux.

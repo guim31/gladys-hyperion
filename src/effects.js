@@ -1,5 +1,7 @@
 // -----------------------------------------------------------------------------
-// The effects Hyperion.ng ships with, by their exact names. They fill the
+// The effects Hyperion.ng ships with, by their exact names, plus "Rainbow
+// waves", HyperHDR's own (HyperHDR 22 lacks 14 of the others, and adds music
+// effects that need its audio capture). They fill the
 // static lists of the manifest (the scene action and the widget settings
 // cannot read the server): a scene can still name any other effect, its own
 // included, in the free text field. Names as listed by the `serverinfo` of a
@@ -34,6 +36,7 @@ export const BUILTIN_EFFECTS = [
   'Rainbow mood',
   'Rainbow swirl',
   'Rainbow swirl fast',
+  'Rainbow waves',
   'Random',
   'Red mood blobs',
   'Sea waves',

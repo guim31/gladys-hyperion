@@ -1,0 +1,32 @@
+{
+  "command": "sysinfo",
+  "info": {
+    "hyperhdr": {
+      "build": "(HEAD detached at v22.0.0.0) (Awawa-2ed4c00/e5bda28-1788221035)",
+      "gitremote": "https://github.com/awawa-dev/HyperHDR",
+      "id": "3e7d1c2b-4a5f-5e6d-9c8b-0a1b2c3d4e5f",
+      "readOnlyMode": false,
+      "time": "Sep  1 2026 00:33:23",
+      "version": "22.0.0"
+    },
+    "system": {
+      "architecture": "x86_64",
+      "cpuHardware": "",
+      "cpuModelName": "Intel(R) N100",
+      "cpuModelType": "190",
+      "cpuRevision": "",
+      "domainName": "",
+      "hostName": "hyperhdr-host",
+      "kernelType": "linux",
+      "kernelVersion": "6.8.0-138-generic",
+      "openssl": "OpenSSL 3.0.18 30 Sep 2025",
+      "prettyName": "Debian GNU/Linux 12 (bookworm)",
+      "productType": "debian",
+      "productVersion": "12",
+      "qtVersion": "6.8.3",
+      "wordSize": "64"
+    }
+  },
+  "success": true,
+  "tan": 2
+}

@@ -11,7 +11,7 @@ import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
 import { registerHandlers } from '../src/app.js';
 import { DEFAULT_CONFIG } from '../src/config.js';
 import { BUILTIN_EFFECTS } from '../src/effects.js';
-import { MDNS_SERVICE, SSDP_ST } from '../src/hyperion/discovery.js';
+import { MDNS_SERVICE, MDNS_SERVICE_HYPERHDR, SSDP_ST } from '../src/hyperion/discovery.js';
 import { SCENE_ACTIONS } from '../src/scenes.js';
 import { WIDGETS } from '../src/widgets.js';
 
@@ -100,11 +100,12 @@ test('the network discovery declarations are the ones the code scans', () => {
   assert.deepEqual(manifest.network_discovery, [
     { type: 'ssdp', st: SSDP_ST },
     { type: 'mdns', service: MDNS_SERVICE },
+    { type: 'mdns', service: MDNS_SERVICE_HYPERHDR },
   ]);
 });
 
 test('the identity of the integration', () => {
-  assert.equal(manifest.name, 'Hyperion');
+  assert.equal(manifest.name, 'Hyperion / HyperHDR');
   assert.deepEqual(manifest.categories, ['lighting']);
   assert.deepEqual(manifest.transports, ['local']);
   assert.equal(manifest.type, 'device');

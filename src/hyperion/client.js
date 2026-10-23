@@ -17,6 +17,7 @@ import net from 'node:net';
 
 export const DEFAULT_PORT = 19444;
 export const DEFAULT_TIMEOUT_MS = 5000;
+const START_TIMEOUT_MS = 20_000;
 // The origin shown by Hyperion next to the colours and effects we set
 // (4 to 20 characters).
 export const ORIGIN = 'Gladys';
@@ -268,8 +269,13 @@ export class HyperionConnection extends EventEmitter {
     return this.request({ command: 'instance', subcommand: 'switchTo', instance });
   }
 
+  // Starting an instance opens its LED device: seconds, not milliseconds (a
+  // new HyperHDR instance took more than 5 s on its first start).
   startInstance(instance) {
-    return this.request({ command: 'instance', subcommand: 'startInstance', instance });
+    return this.request(
+      { command: 'instance', subcommand: 'startInstance', instance },
+      { timeoutMs: Math.max(this.timeoutMs, START_TIMEOUT_MS) },
+    );
   }
 
   /**
