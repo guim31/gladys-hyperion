@@ -33,6 +33,7 @@ import { createIssueLog } from './issues.js';
 import { HyperionConnection, HyperionError } from './hyperion/client.js';
 import {
   MDNS_SERVICE,
+  MDNS_SERVICE_HYPERHDR,
   SSDP_ST,
   mdnsCandidates,
   mergeCandidates,
@@ -42,14 +43,17 @@ import {
   SUBSCRIPTIONS,
   adjustmentIds,
   apiPriorities,
+  brightnessAdjustment,
   applyUpdate,
   captureComponents,
   componentEnabled,
   findEffect,
   intToRgb,
+  isHyperHDR,
   isOn,
   parseInstances,
   rgbToHex,
+  serverIdentity,
 } from './hyperion/model.js';
 
 const logger = createLogger({ name: 'hyperion' });
@@ -261,7 +265,9 @@ export class HyperionHub {
         );
       }
     }
-    logger.debug(`Scan: ${results.length} answer(s) (${SSDP_ST}, ${MDNS_SERVICE})`);
+    logger.debug(
+      `Scan: ${results.length} answer(s) (${SSDP_ST}, ${MDNS_SERVICE}, ${MDNS_SERVICE_HYPERHDR})`,
+    );
     return results;
   }
 
@@ -295,7 +301,8 @@ export class HyperionHub {
       connection = await this.open(candidate);
       await this.authenticate(connection, { id: candidate.id ?? known?.id, address: key });
       const sysinfo = await connection.sysinfo();
-      const id = String(sysinfo.hyperion?.id ?? candidate.id ?? '').toLowerCase();
+      const identity = serverIdentity(sysinfo);
+      const id = identity.id || String(candidate.id ?? '').toLowerCase();
       if (!id) {
         throw new HyperionError('the server has no id', { code: 'refused' });
       }
@@ -312,7 +319,8 @@ export class HyperionHub {
         host: candidate.host,
         port: candidate.port,
         name: candidate.name ?? known?.name ?? sysinfo.system?.hostName ?? null,
-        version: sysinfo.hyperion?.version ?? candidate.version ?? null,
+        product: identity.product,
+        version: identity.version ?? candidate.version ?? null,
         instances: parseInstances(info),
       });
       this.pendingHosts.delete(key);
@@ -351,7 +359,7 @@ export class HyperionHub {
   }
 
   /** Create or update the record of a server identified by its id. */
-  serverRecord({ id, host, port, name, version, instances }) {
+  serverRecord({ id, host, port, name, product, version, instances }) {
     let server = this.servers.get(id);
     if (!server) {
       server = {
@@ -359,6 +367,7 @@ export class HyperionHub {
         host,
         port,
         name: name ?? host,
+        product: product === 'HyperHDR' ? 'HyperHDR' : 'Hyperion',
         version: version ?? null,
         instances: [],
         infos: new Map(),
@@ -380,6 +389,9 @@ export class HyperionHub {
     }
     server.name = name ?? server.name;
     server.version = version ?? server.version;
+    if (product === 'Hyperion' || product === 'HyperHDR') {
+      server.product = product;
+    }
     if (instances.length > 0) {
       server.instances = instances;
     }
@@ -467,7 +479,12 @@ export class HyperionHub {
           await connection.switchTo(number);
         }
         const info = await connection.serverinfo(SUBSCRIPTIONS);
-        const link = { instance: number, connection, refreshedAt: this.now() };
+        const link = {
+          instance: number,
+          connection,
+          refreshedAt: this.now(),
+          duringRefresh: new Set(),
+        };
         server.links.set(number, link);
         server.infos.set(number, info);
         connection.on('update', (message) => this.onUpdate(server, link, message));
@@ -527,7 +544,7 @@ export class HyperionHub {
       server.announced = true;
       const running = server.instances.filter((instance) => instance.running).length;
       logger.info(
-        `Hyperion ${server.name} found at ${address(server)} ` +
+        `${server.product} ${server.name} found at ${address(server)} ` +
           `(${server.version ?? 'unknown version'}, ${running} running instance(s))`,
       );
     }
@@ -553,6 +570,9 @@ export class HyperionHub {
     const { info, kind } = applyUpdate(server.infos.get(link.instance) ?? {}, message);
     if (!kind) {
       return;
+    }
+    for (const pushes of link.duringRefresh) {
+      pushes.push(message);
     }
     server.infos.set(link.instance, info);
     logger.debug(`${server.name}: ${message.command} (instance ${link.instance})`);
@@ -620,8 +640,16 @@ export class HyperionHub {
 
   /** Read an instance again (a missed push, a silent connection). */
   async refreshLink(server, link) {
+    // HyperHDR may answer a serverinfo with a state older than a push it sent
+    // just before (LEDDEVICE, right after ALL is switched): the pushes that
+    // arrive while the request runs are applied again on top of the reply.
+    const pushes = [];
+    link.duringRefresh.add(pushes);
     try {
-      const info = await link.connection.serverinfo();
+      let info = await link.connection.serverinfo();
+      for (const message of pushes) {
+        info = applyUpdate(info, message).info;
+      }
       link.refreshedAt = this.now();
       server.infos.set(link.instance, info);
       this.updateInstances(server, parseInstances(info));
@@ -629,6 +657,8 @@ export class HyperionHub {
     } catch (err) {
       logger.debug(`${server.name}: refresh of instance ${link.instance} failed (${err.message})`);
       link.connection.close();
+    } finally {
+      link.duringRefresh.delete(pushes);
     }
   }
 
@@ -800,6 +830,7 @@ export class HyperionHub {
         host: server.host,
         port: server.port,
         name: server.name,
+        product: server.product,
         version: server.version,
         instances: server.instances,
         infos: Object.fromEntries(
@@ -923,7 +954,7 @@ export class HyperionHub {
     if (componentEnabled(info, 'ALL') === false) {
       await link.connection.setComponent('ALL', true);
     }
-    if (componentEnabled(info, 'LEDDEVICE') === false) {
+    if (componentEnabled(info, 'LEDDEVICE') === false && !isHyperHDR(info)) {
       await link.connection.setComponent('LEDDEVICE', true);
     }
   }
@@ -967,7 +998,9 @@ export class HyperionHub {
     const link = await this.link(target);
     for (const id of adjustmentIds(this.info(target))) {
       await link.connection.setAdjustment(
-        id === null ? { brightness: level } : { id, brightness: level },
+        id === null
+          ? brightnessAdjustment(this.info(target), level)
+          : { id, ...brightnessAdjustment(this.info(target), level) },
       );
     }
     await this.ensureOn(target);
@@ -1161,6 +1194,7 @@ export class HyperionHub {
       servers: [...this.servers.values()].map((server) => ({
         name: server.name,
         address: address(server),
+        product: server.product,
         version: server.version ?? '?',
         instances: server.instances.length,
         reachable: this.isConnected(server),

@@ -33,6 +33,9 @@ export const NAMES = {
     'component-audio': 'Audio capture',
     'component-smoothing': 'Smoothing',
     'component-blackborder': 'Black bar detection',
+    'component-systemgrabber': 'Screen capture',
+    'component-videograbber': 'USB capture',
+    'component-hdr': 'HDR tone mapping',
     noEffect: 'None',
   },
   fr: {
@@ -48,6 +51,9 @@ export const NAMES = {
     'component-audio': 'Capture audio',
     'component-smoothing': 'Lissage',
     'component-blackborder': 'Détection des bandes noires',
+    'component-systemgrabber': "Capture d'écran",
+    'component-videograbber': 'Capture USB',
+    'component-hdr': 'Tone mapping HDR',
     noEffect: 'Aucun',
   },
   de: {
@@ -63,6 +69,9 @@ export const NAMES = {
     'component-audio': 'Audioaufnahme',
     'component-smoothing': 'Glättung',
     'component-blackborder': 'Schwarze-Balken-Erkennung',
+    'component-systemgrabber': 'Bildschirmaufnahme',
+    'component-videograbber': 'USB-Aufnahme',
+    'component-hdr': 'HDR-Tone-Mapping',
     noEffect: 'Keiner',
   },
   es: {
@@ -78,6 +87,9 @@ export const NAMES = {
     'component-audio': 'Captura de audio',
     'component-smoothing': 'Suavizado',
     'component-blackborder': 'Detección de bandas negras',
+    'component-systemgrabber': 'Captura de pantalla',
+    'component-videograbber': 'Captura USB',
+    'component-hdr': 'Tone mapping HDR',
     noEffect: 'Ninguno',
   },
 };
@@ -93,6 +105,8 @@ export const SOURCE_TEXT = {
     other: (source) => `Other source: ${source}`,
     GRABBER: 'screen capture',
     V4L: 'USB capture',
+    SYSTEMGRABBER: 'screen capture',
+    VIDEOGRABBER: 'USB capture',
   },
   fr: {
     off: 'Éteint',
@@ -103,6 +117,8 @@ export const SOURCE_TEXT = {
     other: (source) => `Autre source : ${source}`,
     GRABBER: "capture d'écran",
     V4L: 'capture USB',
+    SYSTEMGRABBER: "capture d'écran",
+    VIDEOGRABBER: 'capture USB',
   },
   de: {
     off: 'Aus',
@@ -113,6 +129,8 @@ export const SOURCE_TEXT = {
     other: (source) => `Andere Quelle: ${source}`,
     GRABBER: 'Bildschirmaufnahme',
     V4L: 'USB-Aufnahme',
+    SYSTEMGRABBER: 'Bildschirmaufnahme',
+    VIDEOGRABBER: 'USB-Aufnahme',
   },
   es: {
     off: 'Apagado',
@@ -123,16 +141,18 @@ export const SOURCE_TEXT = {
     other: (source) => `Otra fuente: ${source}`,
     GRABBER: 'captura de pantalla',
     V4L: 'captura USB',
+    SYSTEMGRABBER: 'captura de pantalla',
+    VIDEOGRABBER: 'captura USB',
   },
 };
 
 // Shown by Gladys under the integration name when it is not connected.
 export const CONNECTION_TEXT = {
   noServer: {
-    en: 'No Hyperion server found. Check that it is on the same network, or enter its IP address.',
-    fr: "Aucun serveur Hyperion trouvé. Vérifiez qu'il est sur le même réseau, ou saisissez son adresse IP.",
-    de: 'Kein Hyperion-Server gefunden. Prüfe, ob er im selben Netzwerk ist, oder gib seine IP-Adresse ein.',
-    es: 'No se ha encontrado ningún servidor Hyperion. Compruebe que está en la misma red o introduzca su dirección IP.',
+    en: 'No Hyperion or HyperHDR server found. Check that it is on the same network, or enter its IP address.',
+    fr: "Aucun serveur Hyperion ou HyperHDR trouvé. Vérifiez qu'il est sur le même réseau, ou saisissez son adresse IP.",
+    de: 'Kein Hyperion- oder HyperHDR-Server gefunden. Prüfe, ob er im selben Netzwerk ist, oder gib seine IP-Adresse ein.',
+    es: 'No se ha encontrado ningún servidor Hyperion o HyperHDR. Compruebe que está en la misma red o introduzca su dirección IP.',
   },
   tokenNeeded: {
     en: 'Hyperion asks for a token: use "Request a token", or paste one in the configuration.',
@@ -193,10 +213,10 @@ export const ERRORS = {
 // The report under the "Search for servers" button.
 export const SEARCH_TEXT = {
   en: {
-    none: 'No Hyperion server found.',
+    none: 'No Hyperion or HyperHDR server found.',
     count: (servers, reachable) => `${servers} server(s), ${reachable} answering:`,
     server: (name, address, version, instances) =>
-      `${name} (${address}, Hyperion ${version}, ${instances} instance(s))`,
+      `${name} (${address}, ${version}, ${instances} instance(s))`,
     unreachable: 'not answering',
     tokenNeeded: (address) => `${address} asks for a token.`,
     noDiscovery:
@@ -205,10 +225,10 @@ export const SEARCH_TEXT = {
     noAnswer: (list) => `No answer from: ${list}.`,
   },
   fr: {
-    none: 'Aucun serveur Hyperion trouvé.',
+    none: 'Aucun serveur Hyperion ou HyperHDR trouvé.',
     count: (servers, reachable) => `${servers} serveur(s), ${reachable} répondent :`,
     server: (name, address, version, instances) =>
-      `${name} (${address}, Hyperion ${version}, ${instances} instance(s))`,
+      `${name} (${address}, ${version}, ${instances} instance(s))`,
     unreachable: 'ne répond pas',
     tokenNeeded: (address) => `${address} demande un jeton.`,
     noDiscovery:
@@ -217,10 +237,10 @@ export const SEARCH_TEXT = {
     noAnswer: (list) => `Pas de réponse de : ${list}.`,
   },
   de: {
-    none: 'Kein Hyperion-Server gefunden.',
+    none: 'Kein Hyperion- oder HyperHDR-Server gefunden.',
     count: (servers, reachable) => `${servers} Server, davon ${reachable} erreichbar:`,
     server: (name, address, version, instances) =>
-      `${name} (${address}, Hyperion ${version}, ${instances} Instanz(en))`,
+      `${name} (${address}, ${version}, ${instances} Instanz(en))`,
     unreachable: 'antwortet nicht',
     tokenNeeded: (address) => `${address} verlangt ein Token.`,
     noDiscovery:
@@ -229,10 +249,10 @@ export const SEARCH_TEXT = {
     noAnswer: (list) => `Keine Antwort von: ${list}.`,
   },
   es: {
-    none: 'No se ha encontrado ningún servidor Hyperion.',
+    none: 'No se ha encontrado ningún servidor Hyperion o HyperHDR.',
     count: (servers, reachable) => `${servers} servidor(es), ${reachable} responden:`,
     server: (name, address, version, instances) =>
-      `${name} (${address}, Hyperion ${version}, ${instances} instancia(s))`,
+      `${name} (${address}, ${version}, ${instances} instancia(s))`,
     unreachable: 'no responde',
     tokenNeeded: (address) => `${address} pide un token.`,
     noDiscovery:

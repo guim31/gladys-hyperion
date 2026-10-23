@@ -1,0 +1,35 @@
+{
+  "command": "sysinfo",
+  "info": {
+    "hyperion": {
+      "build": "Lord-Grey-3c603136/1a003600-1775493764",
+      "buildType": "Release",
+      "gitremote": "https://github.com/hyperion-project/hyperion.ng",
+      "id": "5f0c9a1e-2b3d-5c4e-8f6a-7b8c9d0e1f2a",
+      "isGuiMode": false,
+      "readOnlyMode": false,
+      "time": "2026-04-06 16:59:22",
+      "version": "2.2.1"
+    },
+    "system": {
+      "architecture": "x86_64",
+      "cpuHardware": "",
+      "cpuModelName": "Intel(R) N100",
+      "cpuModelType": "190",
+      "cpuRevision": "",
+      "domainName": "",
+      "hostName": "hyperion-host",
+      "isUserAdmin": true,
+      "kernelType": "linux",
+      "kernelVersion": "6.8.0-138-generic",
+      "prettyName": "Debian GNU/Linux 12 (bookworm)",
+      "productType": "debian",
+      "productVersion": "12",
+      "pyVersion": "3.9.2",
+      "qtVersion": "6.4.2",
+      "wordSize": "64"
+    }
+  },
+  "success": true,
+  "tan": 2
+}

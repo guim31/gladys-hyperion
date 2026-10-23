@@ -146,10 +146,10 @@ test('nothing found: Gladys says so, and the search report explains why', async 
   assert.equal(ack.success, true);
   assert.equal(
     ack.data.message.en,
-    'No Hyperion server found. Automatic discovery through Gladys is unavailable: enter the IP ' +
+    'No Hyperion or HyperHDR server found. Automatic discovery through Gladys is unavailable: enter the IP ' +
       'address of the server. No answer from: 127.0.0.1:1. Ignored addresses: 300.1.2.3.',
   );
-  assert.match(ack.data.message.fr, /^Aucun serveur Hyperion trouvé\./);
+  assert.match(ack.data.message.fr, /^Aucun serveur Hyperion ou HyperHDR trouvé\./);
 });
 
 test('the search report lists the servers', async (t) => {

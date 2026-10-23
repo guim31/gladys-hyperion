@@ -10,6 +10,25 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- HyperHDR support (tested with HyperHDR 22.0.0): its servers are found by
+  mDNS or by address, shown with their own model ("HyperHDR 22.0.0"), and
+  their screen capture, USB capture and HDR tone mapping get a switch each.
+  The brightness drives HyperHDR's luminance gain.
+- "Rainbow waves", HyperHDR's own effect, in the effect lists of the scene
+  action and of the widget.
+
+### Fixed
+
+- A HyperHDR server was refused ("the server has no id"): its sysinfo names
+  it `hyperhdr`, not `hyperion`.
+- After a command, the state read back could undo a change the server had
+  just pushed (seen on HyperHDR with the LED output): pushes received during
+  the read are applied again.
+- Starting a stopped instance from Gladys could time out: the server takes
+  several seconds to open a new LED device (20 s allowed now).
+
 ## [1.0.1] - 2026-10-15
 
 ### Added

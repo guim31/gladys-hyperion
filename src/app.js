@@ -135,7 +135,12 @@ function searchReport(summary, text) {
     const reachable = servers.filter((server) => server.reachable).length;
     lines.push(text.count(servers.length, reachable));
     const list = servers.map((server) => {
-      const label = text.server(server.name, server.address, server.version, server.instances);
+      const label = text.server(
+        server.name,
+        server.address,
+        `${server.product ?? 'Hyperion'} ${server.version}`,
+        server.instances,
+      );
       return server.reachable ? label : `${label} – ${text.unreachable}`;
     });
     lines.push(`${list.join(', ')}.`);

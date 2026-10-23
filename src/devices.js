@@ -138,7 +138,7 @@ export function featureSpecs(info, language) {
 /**
  * Discovery payload of an instance device.
  * @param {object} gladys
- * @param {object} server { id, host, port, version }
+ * @param {object} server { id, host, port, product, version }
  * @param {{ instance: number, name: string }} instance
  * @param {object} info the state of the instance ({} for a stopped instance)
  * @param {string} language
@@ -148,7 +148,7 @@ export function buildDevice(gladys, server, instance, info, language) {
   return {
     name: instance.name,
     external_id: ids.device,
-    model: server.version ? `Hyperion ${server.version}` : 'Hyperion',
+    model: `${server.product ?? 'Hyperion'}${server.version ? ` ${server.version}` : ''}`,
     // The states are pushed by the server (subscriptions) and refreshed by
     // the integration's own timer: Gladys does not poll these devices.
     should_poll: false,

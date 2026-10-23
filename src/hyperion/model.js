@@ -14,11 +14,14 @@ export const SUBSCRIPTIONS = [
 ];
 
 // The video captures: what makes the LEDs follow the picture ("Ambilight").
-export const CAPTURE_COMPONENTS = ['GRABBER', 'V4L'];
+// Hyperion.ng names them GRABBER (screen) and V4L (USB); HyperHDR names them
+// SYSTEMGRABBER and VIDEOGRABBER (read on a real HyperHDR 22).
+export const CAPTURE_COMPONENTS = ['GRABBER', 'V4L', 'SYSTEMGRABBER', 'VIDEOGRABBER'];
 
 // The components offered as switches, in this order, when the instance has
 // them. ALL is the power of the light; FORWARDER and BOBLIGHTSERVER are
-// network plumbing a home automation has no business toggling.
+// network plumbing a home automation has no business toggling. The HyperHDR
+// components come last: a Hyperion.ng device keeps its features in its order.
 export const SWITCHABLE_COMPONENTS = [
   'LEDDEVICE',
   'GRABBER',
@@ -26,6 +29,9 @@ export const SWITCHABLE_COMPONENTS = [
   'AUDIO',
   'SMOOTHING',
   'BLACKBORDER',
+  'SYSTEMGRABBER',
+  'VIDEOGRABBER',
+  'HDR',
 ];
 
 // The JSON API accepts priorities 1 to 253 for colours and effects (0 is the
@@ -35,6 +41,21 @@ export const MAX_PRIORITY = 253;
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const list = (value) => (Array.isArray(value) ? value.filter(isObject) : []);
+
+/**
+ * Which software answers, from its `sysinfo`: Hyperion.ng fills `hyperion`,
+ * HyperHDR (a fork with the same JSON API) fills `hyperhdr` instead.
+ * @returns {{ product: string, id: string, version: string|null }}
+ */
+export function serverIdentity(sysinfo) {
+  const hdr = isObject(sysinfo?.hyperhdr) && !isObject(sysinfo?.hyperion);
+  const block = (hdr ? sysinfo.hyperhdr : sysinfo?.hyperion) ?? {};
+  return {
+    product: hdr ? 'HyperHDR' : 'Hyperion',
+    id: typeof block.id === 'string' ? block.id.toLowerCase() : '',
+    version: typeof block.version === 'string' && block.version ? block.version : null,
+  };
+}
 
 /**
  * Apply a pushed update to the state of an instance.
@@ -116,23 +137,59 @@ export function componentEnabled(info, name) {
   return typeof component?.enabled === 'boolean' ? component.enabled : null;
 }
 
-/** The switchable components the instance has, in display order. */
+/**
+ * True for the state of a HyperHDR instance: its serverinfo has the HDR
+ * component and a `videomodehdr`, which Hyperion.ng has not.
+ */
+export function isHyperHDR(info) {
+  return componentEnabled(info, 'HDR') !== null || typeof info?.videomodehdr === 'number';
+}
+
+/**
+ * The switchable components the instance has, in display order. HyperHDR
+ * drives LEDDEVICE itself (off when no source is left, on again with the next
+ * one, even after the user turned it off): no switch for it there.
+ */
 export function availableComponents(info) {
-  return SWITCHABLE_COMPONENTS.filter((name) => componentEnabled(info, name) !== null);
+  const hdr = isHyperHDR(info);
+  return SWITCHABLE_COMPONENTS.filter(
+    (name) => componentEnabled(info, name) !== null && !(hdr && name === 'LEDDEVICE'),
+  );
 }
 
 /**
  * The light is on when the instance processes (ALL) and drives its LEDs
- * (LEDDEVICE), as hyperion-py and the Hyperion interface read it.
+ * (LEDDEVICE), as hyperion-py and the Hyperion interface read it. On HyperHDR,
+ * whose LEDDEVICE follows the sources, ALL alone tells it.
  */
 export function isOn(info) {
-  return componentEnabled(info, 'ALL') === true && componentEnabled(info, 'LEDDEVICE') === true;
+  return (
+    componentEnabled(info, 'ALL') === true &&
+    (isHyperHDR(info) || componentEnabled(info, 'LEDDEVICE') === true)
+  );
 }
 
-/** Brightness of the first adjustment, 0-100, or null. */
+/**
+ * Brightness of the first adjustment, 0-100, or null. Hyperion.ng has a
+ * `brightness` (0-100); HyperHDR has none, its interface calls `luminanceGain`
+ * (0-10, 1 by default) "Brightness/luminance": read as 100 % from 1 up.
+ */
 export function brightness(info) {
-  const value = list(info?.adjustment)[0]?.brightness;
-  return Number.isFinite(value) && value >= 0 && value <= 100 ? Math.round(value) : null;
+  const adjustment = list(info?.adjustment)[0];
+  const value = adjustment?.brightness;
+  if (Number.isFinite(value) && value >= 0 && value <= 100) {
+    return Math.round(value);
+  }
+  const gain = adjustment?.luminanceGain;
+  return Number.isFinite(gain) && gain >= 0 ? Math.round(Math.min(1, gain) * 100) : null;
+}
+
+/** The adjustment that sets a brightness (1-100) on this server. */
+export function brightnessAdjustment(info, level) {
+  const adjustment = list(info?.adjustment)[0];
+  return adjustment && !('brightness' in adjustment) && 'luminanceGain' in adjustment
+    ? { luminanceGain: level / 100 }
+    : { brightness: level };
 }
 
 /** The adjustment ids to change for a new brightness ([null] when none has an id). */

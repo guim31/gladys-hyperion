@@ -2,7 +2,8 @@
 // Conformity with the Gladys core, on every device discovered from realistic
 // servers: the stock serverinfo of Hyperion.ng 2.0 (two instances, USB capture
 // shown), a newer layout with audio capture and an effect shown, a stopped
-// instance — in every feature-name language.
+// instance, the serverinfo recorded on a real Hyperion.ng 2.2.1 and on a real
+// HyperHDR 22.0.0 — in every feature-name language.
 //
 // The table (test/fixtures/gladys-feature-table.json) is extracted from the
 // core code: a category/type couple missing there shows as "undefined" or
@@ -14,7 +15,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createFakeHyperion, instanceInfo } from './helpers/fakeHyperion.js';
+import { SERVERINFO_2_2_1, createFakeHyperion, instanceInfo } from './helpers/fakeHyperion.js';
 import { createWorld } from './helpers/world.js';
 
 const table = JSON.parse(
@@ -57,6 +58,15 @@ const servers = async () => [
       { instance: 1, name: 'Bedroom', running: false },
     ],
   }),
+  await createFakeHyperion({
+    id: '5f0c9a1e-2b3d-5c4e-8f6a-7b8c9d0e1f2a',
+    version: '2.2.1',
+    instances: [{ instance: 0, name: 'Office', info: instanceInfo(SERVERINFO_2_2_1) }],
+  }),
+  await createFakeHyperion({
+    product: 'HyperHDR',
+    instances: [{ instance: 0, name: 'Cinema', info: instanceInfo({}, 'HyperHDR') }],
+  }),
 ];
 
 for (const language of ['en', 'fr', 'de', 'es']) {
@@ -65,7 +75,7 @@ for (const language of ['en', 'fr', 'de', 'es']) {
     const { gladys, app } = await createWorld({ servers: fakes, config: { language } });
     try {
       const devices = gladys.fake.discoveredDevices;
-      assert.equal(devices.length, 4, 'one device per instance, stopped ones included');
+      assert.equal(devices.length, 6, 'one device per instance, stopped ones included');
 
       for (const device of devices) {
         const where = device.name;
