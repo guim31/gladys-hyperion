@@ -8,8 +8,8 @@
     "de": "TV-Ambientebeleuchtung mit Hyperion.ng und HyperHDR: an/aus, Farbe, Effekte, Ambilight.",
     "es": "Iluminación ambiental de TV Hyperion.ng y HyperHDR: encendido, color, efectos, Ambilight."
   },
-  "version": "1.0.1",
-  "docker_image": "ghcr.io/guim31/gladys-hyperion:1.0.1",
+  "version": "1.1.0",
+  "docker_image": "ghcr.io/guim31/gladys-hyperion:1.1.0",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-hyperion/main/cover.png",
   "categories": ["lighting"],
