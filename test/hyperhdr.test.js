@@ -68,6 +68,8 @@ test('the sysinfo of each software tells which one answers', () => {
     version: '2.2.1',
   });
   assert.deepEqual(serverIdentity({}), { product: 'Hyperion', id: '', version: null });
+  // A HyperHDR that would also fill a `hyperion` block keeps its own id.
+  assert.equal(serverIdentity({ ...SYSINFO_2_2_1, ...HYPERHDR_SYSINFO }).id, HYPERHDR_ID);
 });
 
 test('a real Hyperion.ng 2.2.1 keeps the reading of the earlier versions', () => {
@@ -102,6 +104,13 @@ test('HyperHDR: its components, its brightness, on while its LED output rests', 
   assert.equal(brightness({ adjustment: [{ luminanceGain: 0.35 }] }), 35);
   assert.equal(brightness({ adjustment: [{ luminanceGain: 2.5 }] }), 100);
   assert.deepEqual(brightnessAdjustment(HYPERHDR_SERVERINFO, 40), { luminanceGain: 0.4 });
+  // A gain above 1 set in HyperHDR is kept when 100 % is asked.
+  const boosted = { adjustment: [{ luminanceGain: 2.5 }] };
+  assert.deepEqual(brightnessAdjustment(boosted, 100), { luminanceGain: 2.5 });
+  assert.deepEqual(brightnessAdjustment(boosted, 80), { luminanceGain: 0.8 });
+  // An adjustment not known yet: the product decides.
+  assert.deepEqual(brightnessAdjustment({}, 30, 'HyperHDR'), { luminanceGain: 0.3 });
+  assert.deepEqual(brightnessAdjustment({}, 30, 'Hyperion'), { brightness: 30 });
 });
 
 test('HyperHDR found by mDNS (its web service) is tried on the JSON port', () => {
@@ -204,20 +213,23 @@ test('HyperHDR: the Ambilight switch drives its system and video grabbers', asyn
   assert.equal(state(world, server, 'component-systemgrabber'), 0);
 });
 
-test('a serverinfo older than the pushes before it does not undo them', async (t) => {
-  const { server, world } = await setup(t);
-  await setValue(world, server, 'color', 0xff0000);
-  server.staleSnapshots = true;
-  const hub = world.hub.servers.get(HYPERHDR_ID);
-  const led = () =>
-    hub.infos.get(0).components.find((component) => component.name === 'LEDDEVICE').enabled;
-  assert.equal(led(), true);
-  // ALL off: LEDDEVICE follows (pushed), then the reply to the refresh that
-  // follows the command still says LEDDEVICE on.
-  await setValue(world, server, 'power', 0);
-  await until(() => state(world, server, 'power') === 0, { message: 'off' });
-  assert.equal(led(), false);
-  await setValue(world, server, 'power', 1);
-  await until(() => state(world, server, 'power') === 1, { message: 'on' });
-  assert.equal(led(), true);
-});
+for (const coalesce of [false, true]) {
+  test(`a serverinfo older than the pushes before it does not undo them (${coalesce ? 'one segment' : 'separate writes'})`, async (t) => {
+    const { server, world } = await setup(t);
+    await setValue(world, server, 'color', 0xff0000);
+    server.staleSnapshots = true;
+    server.coalesce = coalesce;
+    const hub = world.hub.servers.get(HYPERHDR_ID);
+    const led = () =>
+      hub.infos.get(0).components.find((component) => component.name === 'LEDDEVICE').enabled;
+    assert.equal(led(), true);
+    // ALL off: LEDDEVICE follows (pushed), then the reply to the refresh that
+    // follows the command still says LEDDEVICE on.
+    await setValue(world, server, 'power', 0);
+    await until(() => state(world, server, 'power') === 0, { message: 'off' });
+    assert.equal(led(), false);
+    await setValue(world, server, 'power', 1);
+    await until(() => state(world, server, 'power') === 1, { message: 'on' });
+    assert.equal(led(), true);
+  });
+}

@@ -62,6 +62,9 @@ export const WIDGET_KEY = 'hyperion';
 
 // Unchanged values are sent again this often: Gladys shows "no recent value"
 // after 48 hours without one.
+// How far back the HyperHDR component pushes are replayed over a refresh.
+const RECENT_PUSH_MS = 1000;
+
 export const STATE_HEARTBEAT_MS = 12 * 60 * 60 * 1000;
 
 export const DEFAULT_TIMINGS = {
@@ -478,16 +481,20 @@ export class HyperionHub {
         if (number !== 0) {
           await connection.switchTo(number);
         }
-        const info = await connection.serverinfo(SUBSCRIPTIONS);
-        const link = {
-          instance: number,
-          connection,
-          refreshedAt: this.now(),
-          duringRefresh: new Set(),
-        };
+        // A push can share the TCP segment of the reply, and is emitted
+        // before the reply resolves: keep those for the new state.
+        let link = null;
+        const early = [];
+        connection.on('update', (message) =>
+          link ? this.onUpdate(server, link, message) : early.push(message),
+        );
+        let info = await connection.serverinfo(SUBSCRIPTIONS);
+        for (const message of early) {
+          info = applyUpdate(info, message).info;
+        }
+        link = { instance: number, connection, refreshedAt: this.now(), recentComponents: [] };
         server.links.set(number, link);
         server.infos.set(number, info);
-        connection.on('update', (message) => this.onUpdate(server, link, message));
         connection.on('close', () => this.onLinkClosed(server, link));
         logger.debug(`${server.name}: instance ${number} linked`);
         this.updateInstances(server, parseInstances(info));
@@ -571,8 +578,11 @@ export class HyperionHub {
     if (!kind) {
       return;
     }
-    for (const pushes of link.duringRefresh) {
-      pushes.push(message);
+    if (message.command === 'components-update' && server.product === 'HyperHDR') {
+      const at = this.now();
+      link.recentComponents = link.recentComponents
+        .filter((entry) => at - entry.at <= RECENT_PUSH_MS)
+        .concat({ at, message });
     }
     server.infos.set(link.instance, info);
     logger.debug(`${server.name}: ${message.command} (instance ${link.instance})`);
@@ -640,15 +650,17 @@ export class HyperionHub {
 
   /** Read an instance again (a missed push, a silent connection). */
   async refreshLink(server, link) {
-    // HyperHDR may answer a serverinfo with a state older than a push it sent
-    // just before (LEDDEVICE, right after ALL is switched): the pushes that
-    // arrive while the request runs are applied again on top of the reply.
-    const pushes = [];
-    link.duringRefresh.add(pushes);
+    // HyperHDR may answer a serverinfo with a component state older than a
+    // components-update it pushed just before (LEDDEVICE, right after ALL is
+    // switched): the ones pushed shortly before and during the request are
+    // applied again on top of the reply. Hyperion.ng keeps its reply as is.
+    const startedAt = this.now();
     try {
       let info = await link.connection.serverinfo();
-      for (const message of pushes) {
-        info = applyUpdate(info, message).info;
+      for (const { at, message } of link.recentComponents) {
+        if (at >= startedAt - RECENT_PUSH_MS) {
+          info = applyUpdate(info, message).info;
+        }
       }
       link.refreshedAt = this.now();
       server.infos.set(link.instance, info);
@@ -657,8 +669,6 @@ export class HyperionHub {
     } catch (err) {
       logger.debug(`${server.name}: refresh of instance ${link.instance} failed (${err.message})`);
       link.connection.close();
-    } finally {
-      link.duringRefresh.delete(pushes);
     }
   }
 
@@ -999,8 +1009,8 @@ export class HyperionHub {
     for (const id of adjustmentIds(this.info(target))) {
       await link.connection.setAdjustment(
         id === null
-          ? brightnessAdjustment(this.info(target), level)
-          : { id, ...brightnessAdjustment(this.info(target), level) },
+          ? brightnessAdjustment(this.info(target), level, target.server.product)
+          : { id, ...brightnessAdjustment(this.info(target), level, target.server.product) },
       );
     }
     await this.ensureOn(target);

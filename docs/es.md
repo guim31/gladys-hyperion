@@ -161,7 +161,8 @@ HyperHDR 22 real:
   **Luz** es su interruptor general.
 - **Brillo**: es el ajuste «Brightness/luminance» de HyperHDR (ganancia de
   luminancia): el 100 % corresponde a una ganancia de 1; una ganancia mayor
-  ajustada en HyperHDR se muestra como 100 %.
+  ajustada en HyperHDR se muestra como 100 % y se
+  mantiene mientras no elija un brillo menor.
 - **Efectos**: HyperHDR tiene su propia lista (efectos musicales, «Rainbow
   waves») y le faltan algunos de Hyperion; el dispositivo muestra los efectos
   de su servidor.

@@ -150,7 +150,8 @@ HyperHDR 22:
   output off by itself when nothing is left to show, and on again with the
   next colour, effect or capture. The **Light** is its main switch.
 - **Brightness** is the "Brightness/luminance" setting of HyperHDR (luminance
-  gain): 100 % is a gain of 1, a higher gain set in HyperHDR shows as 100 %.
+  gain): 100 % is a gain of 1, a higher gain set in HyperHDR shows as 100 %
+  and is kept until you choose a lower brightness.
 - **Effects**: HyperHDR has its own list (music effects, "Rainbow waves") and
   lacks some of Hyperion's; the device lists the effects of your server.
 

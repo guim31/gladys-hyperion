@@ -334,7 +334,8 @@ caractères au moins) après `authorize login` avec le mot de passe par défaut 
 (HyperHDR) ou `global.settings.network` (Hyperion.ng 2.2). Les sessions déjà ouvertes gardent
 leurs droits.
 
-- **`sysinfo`** : HyperHDR remplit `hyperhdr` (`id`, `version`) et pas `hyperion` : sans
+- **`sysinfo`** : HyperHDR remplit `hyperhdr` (`id`, `version`) et pas `hyperion` (le bloc
+  `hyperhdr` l'emporte s'il y a les deux, pour garder l'id) : sans
   `serverIdentity`, la 1.0.1 le refusait (« the server has no id »). Le produit est gardé dans le
   serveur (`product`, sauvé dans `/data`) et donne le modèle (`HyperHDR 22.0.0`).
 - **Composants** : HyperHDR a `ALL`, `HDR`, `SMOOTHING`, `BLACKBORDER`, `FORWARDER`,
@@ -348,11 +349,14 @@ leurs droits.
   et `turnOn` n'envoie pas `LEDDEVICE`. Hyperion.ng 2.2.1, lui, garde `LEDDEVICE` tel quel.
 - **Luminosité** : l'`adjustment` d'HyperHDR n'a ni `brightness` ni `id` et refuse toute clé
   inconnue (`additionalProperties: false`). Son interface appelle `luminanceGain` (0 à 10, 1 par
-  défaut) « Brightness/luminance » : lu 100 % à partir de 1, écrit `level / 100`.
+  défaut) « Brightness/luminance » : lu 100 % à partir de 1, écrit `level / 100` (un gain > 1 est
+  gardé si l'on demande 100 %). Sans `adjustment` connu, le produit du serveur décide.
 - **Course `serverinfo`/push** : HyperHDR a répondu à un `serverinfo` envoyé juste après
-  `componentstate ALL` avec `LEDDEVICE` **plus ancien** que le `components-update` poussé avant la
-  réponse. `refreshLink` rejoue donc sur la réponse les messages poussés pendant la requête
-  (`link.duringRefresh`). Le faux serveur le simule (`staleSnapshots`).
+  `componentstate ALL` avec `LEDDEVICE` **plus ancien** que le `components-update` poussé avant la réponse. Sur HyperHDR seulement, `refreshLink` rejoue sur la réponse les `components-update`
+  reçus depuis 1 s avant la requête (`link.recentComponents`) : un push peut partager le segment
+  TCP de la réponse à la commande et arriver avant que la relecture commence. `openLink` garde
+  aussi les pushes émis avant la résolution du premier `serverinfo`. Le faux serveur simule les deux
+  (`staleSnapshots`, `coalesce`). Hyperion.ng garde sa réponse telle quelle.
 - **`startInstance`** d'une instance tout juste créée sur HyperHDR a dépassé 5 s (réponse au bout
   d'environ 0,6 s ensuite) : délai de 20 s pour cette commande.
 - Une réponse d'erreur d'HyperHDR peut porter `command: "instance"` sans la sous-commande : la

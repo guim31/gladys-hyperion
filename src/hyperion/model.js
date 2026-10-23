@@ -48,7 +48,7 @@ const list = (value) => (Array.isArray(value) ? value.filter(isObject) : []);
  * @returns {{ product: string, id: string, version: string|null }}
  */
 export function serverIdentity(sysinfo) {
-  const hdr = isObject(sysinfo?.hyperhdr) && !isObject(sysinfo?.hyperion);
+  const hdr = isObject(sysinfo?.hyperhdr);
   const block = (hdr ? sysinfo.hyperhdr : sysinfo?.hyperion) ?? {};
   return {
     product: hdr ? 'HyperHDR' : 'Hyperion',
@@ -184,12 +184,21 @@ export function brightness(info) {
   return Number.isFinite(gain) && gain >= 0 ? Math.round(Math.min(1, gain) * 100) : null;
 }
 
-/** The adjustment that sets a brightness (1-100) on this server. */
-export function brightnessAdjustment(info, level) {
+/**
+ * The adjustment that sets a brightness (1-100) on this server. A HyperHDR
+ * gain above 1 reads as 100 %: asking for 100 % keeps it.
+ */
+export function brightnessAdjustment(info, level, product) {
   const adjustment = list(info?.adjustment)[0];
-  return adjustment && !('brightness' in adjustment) && 'luminanceGain' in adjustment
-    ? { luminanceGain: level / 100 }
-    : { brightness: level };
+  const hdr =
+    adjustment && ('brightness' in adjustment || 'luminanceGain' in adjustment)
+      ? !('brightness' in adjustment)
+      : product === 'HyperHDR';
+  if (!hdr) {
+    return { brightness: level };
+  }
+  const gain = adjustment?.luminanceGain;
+  return { luminanceGain: level >= 100 && Number.isFinite(gain) && gain > 1 ? gain : level / 100 };
 }
 
 /** The adjustment ids to change for a new brightness ([null] when none has an id). */

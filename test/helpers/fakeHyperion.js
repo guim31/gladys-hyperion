@@ -82,6 +82,7 @@ export async function createFakeHyperion({
     })),
     product,
     staleSnapshots: false,
+    coalesce: false,
     requests: [],
     sessions: new Set(),
     tokenRequests: [],
@@ -97,10 +98,27 @@ export async function createFakeHyperion({
     }));
   const findInstance = (number) => fake.instances.find((entry) => entry.instance === number);
 
+  // `coalesce = true`: a reply and the pushes it causes leave in one TCP
+  // write, so the client emits the pushes before the reply resolves.
   const send = (session, message) => {
-    if (!session.socket.destroyed) {
-      session.socket.write(`${JSON.stringify(message)}\n`);
+    if (session.socket.destroyed) {
+      return;
     }
+    if (!fake.coalesce) {
+      session.socket.write(`${JSON.stringify(message)}\n`);
+      return;
+    }
+    if (!session.out) {
+      session.out = '';
+      setImmediate(() => {
+        const out = session.out;
+        session.out = null;
+        if (!session.socket.destroyed) {
+          session.socket.write(out);
+        }
+      });
+    }
+    session.out += `${JSON.stringify(message)}\n`;
   };
 
   /** Push an update to every subscribed session of an instance (or all). */

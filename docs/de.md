@@ -162,7 +162,8 @@ einem echten HyperHDR 22 festgestellt wurden:
   der nächsten Aufnahme wieder ein. Das **Licht** ist sein Hauptschalter.
 - **Helligkeit** ist die Einstellung „Brightness/luminance“ von HyperHDR
   (Luminanzverstärkung): 100 % entspricht einer Verstärkung von 1, eine
-  höhere in HyperHDR eingestellte Verstärkung wird als 100 % angezeigt.
+  höhere in HyperHDR eingestellte Verstärkung wird als 100 % angezeigt und
+  bleibt erhalten, bis du eine niedrigere Helligkeit wählst.
 - **Effekte**: HyperHDR hat eine eigene Liste (Musikeffekte, „Rainbow
   waves“), und einige Effekte von Hyperion fehlen; das Gerät listet die
   Effekte deines Servers.

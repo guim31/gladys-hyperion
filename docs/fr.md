@@ -159,7 +159,8 @@ vrai HyperHDR 22 :
   son interrupteur général.
 - **Luminosité** : c'est le réglage « Luminosité/luminance » de HyperHDR (gain
   de luminance) : 100 % correspond à un gain de 1, un gain plus fort réglé dans
-  HyperHDR s'affiche 100 %.
+  HyperHDR s'affiche 100 % et reste
+  tel quel tant que vous ne choisissez pas une luminosité plus basse.
 - **Effets** : HyperHDR a sa propre liste (effets musicaux, « Rainbow waves »)
   et n'a pas certains effets d'Hyperion ; l'appareil liste les effets de votre
   serveur.
